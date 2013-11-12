@@ -59,10 +59,12 @@ class User
       total_attack = 0
       total_recover = 0
       #puts @user.data["team#{t}Array"]
+      next if @data["team#{t}Array"] == '0,0,0,0,0'
       team = @data["team#{t}Array"].split(',')
       print "隊伍#{t + 1}：\n"
       team.each do |m|
         card = @cards[m]
+        next unless card
         monster = @monster.data[card[:monsterId]]
         print "\t"
         print "lv#{card[:level]} "
@@ -125,7 +127,7 @@ class User
 
   def print_helpers
     @helpers.each do |index, h|
-      puts "[#{index}] #{h[:uid]} #{h[:name]} #{h[:level]} #{h[:monster_name]} #{h[:clientHelperCard]}"
+      puts "[#{index}] #{h[:uid]} #{h[:name]} #{h[:level]} #{h[:monster_name]}"
     end
   end
 
