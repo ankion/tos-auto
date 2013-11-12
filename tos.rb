@@ -71,7 +71,7 @@ class Tos
     puts "Floor list"
     floors = @floor.floors.select {|k| k[:stage] == choice_stage}
     floors.each do |f|
-      puts "#{f[:id]} #{f[:name]} #{((@user.data['completedFloorIds'].include? f[:id].to_i) ? '(completed)' : '')}"
+      puts "#{f[:id]} #{f[:name]} #{f[:stamina]} #{((@user.data['completedFloorIds'].include? f[:id].to_i) ? '(completed)' : '')}"
     end
     print 'Choice floor?(b:back,q:quit)'
     choice_floor = gets.chomp

@@ -138,7 +138,7 @@ class Floor
     end
     data['floorList'].each do |f|
       floor = f.split('|')
-      @floors << {:id => floor[0], :stage => floor[1], :name => floor[7]}
+      @floors << {:id => floor[0], :stage => floor[1], :name => floor[7], :stamina => floor[4]}
     end
   end
 
