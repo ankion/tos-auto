@@ -93,10 +93,9 @@ class Tos
     #puts finish_data.inspect
     #puts acs_data.inspect
     puts "waiting complete.(#{@floor.acs_data[:e]})"
-    print "[                    ]\r"
-    print "["
-    20.times do
-      sleep (@floor.acs_data[:e]/20)
+    print "[                                        ]\r["
+    40.times do
+      sleep (@floor.acs_data[:e]/40)
       print '#'
     end
     print "\n"

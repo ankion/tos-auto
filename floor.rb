@@ -87,8 +87,8 @@ class Floor
         puts "\tlv#{e['level']} #{user.monster.data[e['monsterId']][:monsterName]}"
         if e['lootItem']
           loot = e['lootItem']
-          puts "\t\tLoot: lv#{loot['card']['level']} #{user.monster.data[loot['card']['monsterId']][:monsterName]}" if loot['type'] == 'monster'
-          puts "\t\tLoot: #{loot['amount']} Gold" if loot['type'] == 'money'
+          puts "\t\t掉落: lv#{loot['card']['level']} #{user.monster.data[loot['card']['monsterId']][:monsterName]}" if loot['type'] == 'monster'
+          puts "\t\t掉落: #{loot['amount']} Gold" if loot['type'] == 'money'
         end
       end
       #puts "enemy_hp:#{enemy_hp} enemy_attack:#{enemy_attack}"
@@ -97,11 +97,11 @@ class Floor
       @acs_data[:k] = wave_hp
       @acs_data[:g] += @waves_data['waves'][index]['enemies'].length
       loop do
-        @acs_data[:a] += 1 + rand(@waves_data['waves'][index]['enemies'].length)
+        @acs_data[:a] += 1
         wave_recover = team_hp - wave_hp
         wave_hp = team_hp
         wave_combo = 6 + rand(5)
-        wave_attack = team_attack * (wave_combo - 3)
+        wave_attack = team_attack * (wave_combo * 0.3)
         #puts "recover:#{wave_recover} hp:#{wave_hp} combo:#{wave_combo} attack:#{wave_attack}"
         @finish_data[:maxCombo] = wave_combo if @finish_data[:maxCombo] < wave_combo
         @finish_data[:maxAttack] = wave_attack if @finish_data[:maxAttack] < wave_attack
