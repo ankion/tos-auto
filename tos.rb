@@ -24,6 +24,7 @@ class Tos
     #res = Net::HTTP.get_response(uri)
     puts '登入成功'
     res_json = JSON.parse(page.body)
+    exit get_error(res_json) if res_json['respond'].to_i != 1
     puts '取得資料'
     @user.data = res_json['user']
     @user.parse_card_data(res_json['cards'])
@@ -84,6 +85,7 @@ class Tos
     #uri = URI("#{@tos_url}#{@floor.get_helpers_url(@user, 16)}")
     #res = Net::HTTP.get_response(uri)
     res_json = JSON.parse(page.body)
+    return get_error(res_json) if res_json['respond'].to_i != 1
     helpers = res_json['data']['helperList']
     #puts helpers.inspect
     @user.parse_helpers_data(helpers)
@@ -102,6 +104,7 @@ class Tos
     page = @web.get("#{@tos_url}#{@floor.get_enter_url(@user)}")
     #puts page.body
     res_json = JSON.parse(page.body)
+    return get_error(res_json) if res_json['respond'].to_i != 1
     @floor.waves_data = res_json['data']
 
     @floor.set_complete(@user)
@@ -118,6 +121,7 @@ class Tos
     page = @web.get("#{@tos_url}#{@floor.get_complete_url(@user)}")
     #puts page.body
     res_json = JSON.parse(page.body)
+    return get_error(res_json) if res_json['respond'].to_i != 1
     puts "友情點數：#{res_json['data']['friendpoint']}"
     puts "經驗值：#{res_json['data']['expGain']}"
     puts "金錢：#{res_json['data']['coinGain']}"
@@ -125,6 +129,11 @@ class Tos
     @user.parse_card_data(res_json['cards'])
     puts '======================================'
     @user.print_user_sc
+  end
+
+  def get_error(data)
+    puts data['errorMessage']
+    true
   end
 end
 
