@@ -46,9 +46,11 @@ class Tos
     @floor.zones.each do |index, z|
       puts "#{index} #{z[:name]}"
     end
-    print 'Choice zone?'
+    print 'Choice zone?(b:back,q:quit)'
     choice_zone = gets.chomp
     exit if choice_zone == 'q'
+    return false if choice_zone == 'b'
+
     puts "Stage list"
     stages = @floor.stages.select {|k| k[:zone] == choice_zone}
     stages.each do |s|
@@ -61,18 +63,20 @@ class Tos
       print " #{Time.at(s[:start_at].to_i).strftime('%m/%d %H:%M')} ~ #{Time.at(s[:end_at].to_i).strftime('%m/%d %H:%M')}" unless s[:start_at] == ''
       print "\n"
     end
-    print 'Choice stage?'
+    print 'Choice stage?(b:back,q:quit)'
     choice_stage = gets.chomp
     exit if choice_stage == 'q'
+    return false if choice_stage == 'b'
 
     puts "Floor list"
     floors = @floor.floors.select {|k| k[:stage] == choice_stage}
     floors.each do |f|
       puts "#{f[:id]} #{f[:name]} #{((@user.data['completedFloorIds'].include? f[:id].to_i) ? '(completed)' : '')}"
     end
-    print 'Choice floor?'
+    print 'Choice floor?(b:back,q:quit)'
     choice_floor = gets.chomp
     exit if choice_floor == 'q'
+    return false if choice_floor == 'b'
     @floor.wave_floor = choice_floor
 
     puts '取得隊友名單'
@@ -84,12 +88,16 @@ class Tos
     #puts helpers.inspect
     @user.parse_helpers_data(helpers)
     @user.print_helpers
-    print 'Choice helper?'
+    print 'Choice helper?(b:back,q:quit)'
     choice_helper = gets.chomp
     exit if choice_helper == 'q'
+    return false if choice_helper == 'b'
     @floor.wave_helper = @user.helpers[choice_helper.to_i]
     #puts @user.helpers[choice_helper.to_i].inspect
+    return true
+  end
 
+  def fighting
     #puts @floor.get_enter_url(@user, choice_floor, (choice_team.to_i - 1), @user.helpers[choice_helper.to_i])
     page = @web.get("#{@tos_url}#{@floor.get_enter_url(@user)}")
     #puts page.body
@@ -123,5 +131,6 @@ end
 a = Tos.new
 a.login
 loop do
-  a.choice_floor
+  next unless a.choice_floor
+  a.fighting
 end
