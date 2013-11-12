@@ -4,10 +4,11 @@ require 'mechanize'
 require './user'
 require './monster'
 require './floor'
+require './setting'
 
 class Tos
   def initialize
-    @tos_url = 'http://zh.towerofsaviors.com'
+    @tos_url = Settings['tos_url']
     @user = User.new
     #@monster = Monster.new
     @floor = Floor.new

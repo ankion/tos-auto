@@ -2,9 +2,11 @@ GEM
   remote: https://rubygems.org/
   specs:
     addressable (2.3.5)
+    settingslogic (2.0.9)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   addressable (~> 2.3.5)
+  settingslogic

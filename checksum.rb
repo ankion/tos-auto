@@ -1,8 +1,9 @@
 require 'digest/md5'
+require './setting'
 
 class Checksum
   def key
-    "YmZhYTRkNzIwM2VkODhhZTZiZTg4MDU2NWFlYjkxMDU="
+    Settings['tos_key']
   end
 
   def getHash(input, salt = '')

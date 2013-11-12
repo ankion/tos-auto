@@ -1,6 +1,7 @@
 require "addressable/uri"
 require "./checksum"
 require "./monster"
+require "./setting"
 
 class User
   attr_accessor :monster, :data, :cards, :post_data, :helpers
@@ -9,12 +10,12 @@ class User
     @monster = Monster.new
     @post_data = {
       :type => 'facebook',
-      :uniqueKey => '76b9a1496668167a82793481ec546c80',
-      :deviceKey => 'e97e690f98a26a6b73172f99c4b34711',
-      :sysInfo => 'Android OS 2.3.7 / API-10 (GWK74/20130501)|ARMv7 VFPv3 NEON|1|477|35|PowerVR SGX 530|FALSE|OpenGL ES-CM 1.1|None|FALSE|2048|3.27|||40:fc:89:02:b3:55',
+      :uniqueKey => Settings['uniqueKey'],
+      :deviceKey => Settings['deviceKey'],
+      :sysInfo => Settings['sysInfo'],
       #:session => 'c51b955d9535eb1722e898e683be51e3',
       :language => 'zh_TW',
-      :platform => 'android',
+      :platform => Settings['platform'],
       :version => '3.27',
       :timestamp => '',
       :timezone => '8',

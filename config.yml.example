@@ -1,0 +1,8 @@
+# config.yml
+defaults: &defaults
+  tos_url: ""
+  tos_key: ""
+  uniqueKey: ""
+  deviceKey: ""
+  sysInfo: ""
+  platform: ""
