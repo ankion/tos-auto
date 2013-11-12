@@ -134,7 +134,7 @@ class Floor
   def parse_floor_data(data)
     data['stageList'].each do |s|
       stage = s.split('|')
-      @stages << {:id => stage[0], :zone => stage[3], :name => stage[9]}
+      @stages << {:id => stage[0], :zone => stage[3], :name => stage[9], :start_at => stage[7], :end_at => stage[8]}
     end
     data['floorList'].each do |f|
       floor = f.split('|')

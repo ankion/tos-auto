@@ -52,7 +52,14 @@ class Tos
     puts "Stage list"
     stages = @floor.stages.select {|k| k[:zone] == choice_zone}
     stages.each do |s|
-      puts "#{s[:id]} #{s[:name]}"
+      unless s[:start_at] == ''
+        next if Time.now.to_i < Time.at(s[:start_at].to_i).to_i
+        next if Time.now.to_i > Time.at(s[:end_at].to_i).to_i
+      end
+      print "#{s[:id]} #{s[:name]}"
+      print "(completed)" if (@user.data['completedStageIds'].include? s[:id].to_i)
+      print " #{Time.at(s[:start_at].to_i).strftime('%m/%d %H:%M')} ~ #{Time.at(s[:end_at].to_i).strftime('%m/%d %H:%M')}" unless s[:start_at] == ''
+      print "\n"
     end
     print 'Choice stage?'
     choice_stage = gets.chomp
@@ -61,7 +68,7 @@ class Tos
     puts "Floor list"
     floors = @floor.floors.select {|k| k[:stage] == choice_stage}
     floors.each do |f|
-      puts "#{f[:id]} #{f[:name]}"
+      puts "#{f[:id]} #{f[:name]} #{((@user.data['completedFloorIds'].include? f[:id].to_i) ? '(completed)' : '')}"
     end
     print 'Choice floor?'
     choice_floor = gets.chomp
