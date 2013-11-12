@@ -124,7 +124,7 @@ class Floor
         end
       end
     end
-    @acs_data[:e] = (Time.now + ((6 + rand(5)) * @acs_data[:a] )) - Time.now
+    @acs_data[:e] = (Time.now + ((6 + rand(3)) * @acs_data[:a] )) - Time.now
     loop do
       break if @acs_data[:e] < 1000
       @acs_data[:e] -= 100
