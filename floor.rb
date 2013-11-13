@@ -158,6 +158,7 @@ class Floor
       if @acs_data[:a] > @max_round
         puts 'This wave is fail.'
         @acs_data[:h] += 1
+        @acs_data[:k] = 0
         @wave_fail = true
         break
       end
