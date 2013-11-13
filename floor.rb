@@ -146,9 +146,17 @@ class Floor
         end
       end
     end
-    @acs_data[:e] = (Time.now + ((6 + rand(3)) * @acs_data[:a] )) - Time.now
+    floor_data = @floors.select {|k| k[:id] == @wave_floor}
+    #puts "floor:#{floor_data.first[:name]}"
+    if floor_data.first[:name].include? '地獄級'
+      puts 'Hell level!!!!!'
+      @acs_data[:d] += 1 + rand(5)
+      @acs_data[:h] = @acs_data[:d]
+      @acs_data[:c] = "#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)}"
+    end
+    @acs_data[:e] = (Time.now + ((6 + rand(3)) * (@acs_data[:a] + @acs_data[:d]) )) - Time.now
     loop do
-      break if @acs_data[:e] < 1000
+      break if @acs_data[:e] < 1200
       @acs_data[:e] -= 100
     end
   end
