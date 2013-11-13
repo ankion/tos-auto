@@ -50,6 +50,9 @@ class Tos
   def choice_floor
     puts 'Zone list'
     @floor.zones.each do |index, z|
+      if z[:requireFloor]
+        next unless (@user.data['completedFloorIds'].include? z[:requireFloor].to_i)
+      end
       puts "#{index} #{z[:name]}"
     end
     print 'Choice zone?(b:back,q:quit)'
@@ -58,8 +61,10 @@ class Tos
     return false if choice_zone == 'b'
 
     puts "Stage list"
+    last_stage = nil
     stages = @floor.stages.select {|k| k[:zone] == choice_zone}
     stages.each do |s|
+      break unless @user.stage_can_enter? s[:id]
       unless s[:start_at] == ''
         next if Time.now.to_i < Time.at(s[:start_at].to_i).to_i
         next if Time.now.to_i > Time.at(s[:end_at].to_i).to_i
@@ -68,21 +73,32 @@ class Tos
       print "(completed)" if (@user.data['completedStageIds'].include? s[:id].to_i)
       print " #{Time.at(s[:start_at].to_i).strftime('%m/%d %H:%M')} ~ #{Time.at(s[:end_at].to_i).strftime('%m/%d %H:%M')}" unless s[:start_at] == ''
       print "\n"
+      if choice_zone.to_i < 7
+        last_stage = s[:id]
+        break unless (@user.data['completedStageIds'].include? s[:id].to_i)
+      end
     end
     print 'Choice stage?(b:back,q:quit)'
+    print "[#{last_stage}]" if last_stage
     choice_stage = gets.chomp
     exit if choice_stage == 'q'
     return false if choice_stage == 'b'
+    choice_stage = last_stage if last_stage and choice_stage == ''
 
     puts "Floor list"
+    last_floor = nil
     floors = @floor.floors.select {|k| k[:stage] == choice_stage}
     floors.each do |f|
       puts "#{f[:id]} #{f[:name]} #{f[:stamina]} #{((@user.data['completedFloorIds'].include? f[:id].to_i) ? '(completed)' : '')}"
+      last_floor = f[:id]
+      break unless (@user.data['completedFloorIds'].include? f[:id].to_i)
     end
     print 'Choice floor?(b:back,q:quit)'
+    print "[#{last_floor}]" if last_floor
     choice_floor = gets.chomp
     exit if choice_floor == 'q'
     return false if choice_floor == 'b'
+    choice_floor = last_floor if last_floor and choice_floor == ''
     @floor.wave_floor = choice_floor
     return true
   end
@@ -105,9 +121,11 @@ class Tos
       return false
     end
     print 'Choice helper?(b:back,q:quit)'
+    print "[auto]"
     choice_helper = gets.chomp
     exit if choice_helper == 'q'
     return true if choice_helper == 'b'
+    choice_helper = (1 + rand(3)).to_s if choice_helper == ''
     @floor.wave_helper = @user.helpers[choice_helper.to_i]
     #puts @user.helpers[choice_helper.to_i].inspect
     return false
@@ -152,9 +170,9 @@ class Tos
       print "\n"
       return false
     end
-    print 'Play again?(Y/n)'
-    return true if gets.chomp == 'n'
-    return false
+    print 'Play again?(y/N)'
+    return false if gets.chomp == 'y'
+    return true
   end
 
   def get_error(data)

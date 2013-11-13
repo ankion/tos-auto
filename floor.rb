@@ -7,14 +7,14 @@ class Floor
 
   def initialize
     @zones = {
-      '1' => {:name => '寒霜冰川'},
-      '2' => {:name => '熾熱荒土'},
-      '3' => {:name => '神木森林'},
-      '4' => {:name => '聖光之城'},
-      '5' => {:name => '暗夜深淵'},
+      '1' => {:name => '寒霜冰川', :requireFloor => 8},
+      '2' => {:name => '熾熱荒土', :requireFloor => 11},
+      '3' => {:name => '神木森林', :requireFloor => 14},
+      '4' => {:name => '聖光之城', :requireFloor => 17},
+      '5' => {:name => '暗夜深淵', :requireFloor => 20},
       '6' => {:name => '以諾塔'},
-      '7' => {:name => '古神遺跡'},
-      '8' => {:name => '旅人的記憶'}
+      '7' => {:name => '古神遺跡', :requireFloor => 23},
+      '8' => {:name => '旅人的記憶', :requireFloor => 80}
     }
     @stages = []
     @floors = []

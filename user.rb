@@ -9,6 +9,39 @@ class User
 
   def initialize
     @monster = Monster.new
+    @stage_require_floor = {
+      '8' => 23, # 一封
+      '9' => 28,
+      '10' => 33,
+      '11' => 38,
+      '12' => 43,
+      '13' => 48,
+      '14' => 53, # 二封
+      '15' => 58,
+      '16' => 63,
+      '17' => 68,
+      '18' => 73,
+      '19' => 78,
+      '20' => 83, # 三封
+      '21' => 88,
+      '22' => 93,
+      '23' => 98,
+      '24' => 103,
+      '25' => 108,
+      '26' => 113, # 四封
+      '27' => 118,
+      '28' => 123,
+      '29' => 128,
+      '30' => 133,
+      '31' => 138,
+      '32' => 143, # 五封
+      '87' => 148,
+      '88' => 281,
+      '89' => 286,
+      '90' => 291,
+      '91' => 296,
+      '92' => 301 # 六封
+    }
     @post_data = {
       :type => 'facebook',
       :uniqueKey => Settings['uniqueKey'],
@@ -25,6 +58,11 @@ class User
     @data = nil
     @cards = {}
     @helpers = nil
+  end
+
+  def stage_can_enter?(stage)
+    return true unless @stage_require_floor[stage]
+    @data['completedFloorIds'].include? @stage_require_floor[stage]
   end
 
   def parse_helpers_data(data)
@@ -83,6 +121,7 @@ class User
     total_hp = 0
     teams.each do |t|
       card = @cards[t]
+      next unless card
       monster = @monster.data[card[:monsterId]]
       hp = ((monster[:maxCardHP].to_i - monster[:minCardHP].to_i) * (card[:level].to_f / monster[:maxLevel].to_f) + monster[:minCardHP].to_i).to_i
       total_hp += hp
@@ -99,6 +138,7 @@ class User
     total_attack = 0
     teams.each do |t|
       card = @cards[t]
+      next unless card
       monster = @monster.data[card[:monsterId]]
       attack = ((monster[:maxCardAttack].to_i - monster[:minCardAttack].to_i) * (card[:level].to_f / monster[:maxLevel].to_f) + monster[:minCardAttack].to_i).to_i
       total_attack += attack
@@ -115,6 +155,7 @@ class User
     total_recover = 0
     teams.each do |t|
       card = @cards[t]
+      next unless card
       monster = @monster.data[card[:monsterId]]
       recover = ((monster[:maxCardRecover].to_i - monster[:minCardRecover].to_i) * (card[:level].to_f / monster[:maxLevel].to_f) + monster[:minCardRecover].to_i).to_i
       total_recover += recover
