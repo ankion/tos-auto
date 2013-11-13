@@ -126,7 +126,7 @@ class Floor
         wave_attack = team_attack * (wave_combo * 0.3)
         #puts "recover:#{wave_recover} hp:#{wave_hp} combo:#{wave_combo} attack:#{wave_attack}"
         @finish_data[:maxCombo] = wave_combo if @finish_data[:maxCombo] < wave_combo
-        @finish_data[:maxAttack] = wave_attack if @finish_data[:maxAttack] < wave_attack
+        @finish_data[:maxAttack] = wave_attack.to_i if @finish_data[:maxAttack] < wave_attack
         if wave_recover > 0
           @acs_data[:u] = wave_recover if @acs_data[:u] < wave_recover
           @acs_data[:v] = wave_recover if @acs_data[:v] > wave_recover or @acs_data[:v] == 0
@@ -134,7 +134,7 @@ class Floor
         end
         enemy_hp -= wave_attack
         break if enemy_hp < 1
-        if rand(3) == 1
+        if rand(2) == 1
           wave_hp -= enemy_attack
           wave_hp = rand(100) + 1 if wave_hp < 1
           wave_damage = team_hp - wave_hp
@@ -159,6 +159,7 @@ class Floor
       break if @acs_data[:e] < 1200
       @acs_data[:e] -= 100
     end
+    #puts @acs_data.inspect
   end
 
   def parse_floor_data(data)
