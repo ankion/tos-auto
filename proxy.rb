@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 #!/usr/bin/env ruby
 # A quick and dirty implementation of an HTTP proxy server in Ruby
 # because I did not want to install anything.
