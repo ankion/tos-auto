@@ -149,16 +149,25 @@ class Tos
       print '#'
     end
     print "\n"
-    #@floor.get_complete_url(@user, finish_data, acs_data)
-    page = @web.get("#{@tos_url}#{@floor.get_complete_url(@user)}")
-    #puts page.body
-    res_json = JSON.parse(page.body)
-    return get_error(res_json) if res_json['respond'].to_i != 1
-    puts "友情點數：#{res_json['data']['friendpoint']}"
-    puts "經驗值：#{res_json['data']['expGain']}"
-    puts "金錢：#{res_json['data']['coinGain']}"
-    @user.data = res_json['user']
-    @user.parse_card_data(res_json['cards'])
+
+    res_json = nil
+    if @floor.wave_fail and not @floor.one_time_floor?
+      page = @web.get("#{@tos_url}#{@floor.get_fail_url(@user)}")
+      res_json = JSON.parse(page.body)
+      return get_error(res_json) if res_json['respond'].to_i != 1
+      @user.data['currentStamina'] = res_json['user']['currentStamina']
+    else
+      #@floor.get_complete_url(@user, finish_data, acs_data)
+      page = @web.get("#{@tos_url}#{@floor.get_complete_url(@user)}")
+      #puts page.body
+      res_json = JSON.parse(page.body)
+      return get_error(res_json) if res_json['respond'].to_i != 1
+      puts "友情點數：#{res_json['data']['friendpoint']}"
+      puts "經驗值：#{res_json['data']['expGain']}"
+      puts "金錢：#{res_json['data']['coinGain']}"
+      @user.parse_card_data(res_json['cards'])
+      @user.data = res_json['user']
+    end
     puts '======================================'
     @user.print_user_sc
     if @auto_repeat

@@ -3,7 +3,7 @@ require "addressable/uri"
 require './checksum'
 
 class Floor
-  attr_accessor :zones, :stages, :floors, :wave_team, :wave_team_data, :wave_floor, :wave_helper, :waves_data, :finish_data, :acs_data
+  attr_accessor :zones, :stages, :floors, :wave_team, :wave_team_data, :wave_floor, :wave_helper, :waves_data, :wave_fail, :finish_data, :acs_data
 
   def initialize
     @zones = {
@@ -16,6 +16,7 @@ class Floor
       '7' => {:name => '古神遺跡', :requireFloor => 23},
       '8' => {:name => '旅人的記憶', :requireFloor => 80}
     }
+    @one_time_floors = [222, 488]
     @stages = []
     @floors = []
     @waves_data = nil
@@ -23,8 +24,14 @@ class Floor
     @wave_team_data = nil
     @wave_floor = nil
     @wave_helper = nil
+    @wave_fail = false
     @finish_data = nil
     @acs_data = nil
+    @max_round = 150
+  end
+
+  def one_time_floor?
+    @one_time_floors.include? @wave_floor.to_i
   end
 
   def reset_complete
@@ -45,7 +52,7 @@ class Floor
       # Game.runtimeData.eatGemRound
       :a => 0,
       # Game.runtimeData.waveMovedTime
-      :b => @waves_data['waves'].length,
+      :b => 0,
       # Game.runtimeData.SkillUsedTime
       :c => "#{rand(1)},#{rand(1)},#{rand(1)},#{rand(1)},#{rand(1)},#{rand(1)}",
       # Game.runtimeData.retryTime
@@ -55,7 +62,7 @@ class Floor
       # Game.runtimeData.numOfwave
       :f => @waves_data['waves'].length,
       # Game.runtimeData.monsterNum
-      :g => 0,
+      :g => 6,
       # Game.runtimeData.dieTime
       :h => 0,
       # Game.runtimeData.monsterAttackTime
@@ -95,6 +102,9 @@ class Floor
     team_attack = user.get_team_attack(@wave_team_data, @wave_helper)
     team_recover = user.get_team_recover(@wave_team_data, @wave_helper)
     #puts "current hp:#{team_hp} attack:#{team_attack} recover:#{team_recover}"
+    @acs_data[:l] = team_hp
+    @acs_data[:k] = team_hp
+    @wave_fail = false
     puts "Monster list"
     @waves_data['waves'].each_index do |index|
       puts "第 #{index + 1} 波"
@@ -116,10 +126,9 @@ class Floor
       end
       #puts "enemy_hp:#{enemy_hp} enemy_attack:#{enemy_attack}"
       wave_hp = team_hp
-      @acs_data[:l] = wave_hp
-      @acs_data[:k] = wave_hp
-      @acs_data[:g] += @waves_data['waves'][index]['enemies'].length
+      #@acs_data[:g] += @waves_data['waves'][index]['enemies'].length
       loop do
+        break if @acs_data[:a] > @max_round
         @acs_data[:a] += 1
         wave_recover = team_hp - wave_hp
         wave_hp = team_hp
@@ -146,6 +155,13 @@ class Floor
           @acs_data[:i] += 1
         end
       end
+      if @acs_data[:a] > @max_round
+        puts 'This wave is fail.'
+        @acs_data[:h] += 1
+        @wave_fail = true
+        break
+      end
+      @acs_data[:b] += 1
     end
     floor_data = @floors.select {|k| k[:id] == @wave_floor}
     #puts "floor:#{floor_data.first[:name]}"
@@ -156,10 +172,10 @@ class Floor
       @acs_data[:c] = "#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)}"
     end
     @acs_data[:e] = (Time.now + ((6 + rand(3)) * (@acs_data[:a] + @acs_data[:d]) )) - Time.now
-    loop do
-      break if @acs_data[:e] < 1200
-      @acs_data[:e] -= 100
-    end
+    #loop do
+      #break if @acs_data[:e] < 1200
+      #@acs_data[:e] -= 100
+    #end
     puts "maxAttack:#{@finish_data[:maxAttack]} maxCombo:#{@finish_data[:maxCombo]}"
     puts "round:#{@acs_data[:a]} retry:#{@acs_data[:d]} die:#{@acs_data[:h]}"
     puts "monsterAttackTime:#{@acs_data[:i]} totalDamage:#{@acs_data[:r]}"
@@ -216,6 +232,28 @@ class Floor
     uri = Addressable::URI.new
     uri.query_values = post_data
     url = "/api/floor/enter?#{uri.query}"
+    #puts url
+    return "#{url}&hash=#{encypt.getHash(url, '')}"
+  end
+
+  def get_fail_url(user)
+    encypt = Checksum.new
+    post_data = {
+      :floorId => @wave_floor,
+      :team => @wave_team,
+      :helperUid => @wave_helper[:uid],
+      :uid => user.data['uid'],
+      :session => user.data['session'],
+      :language => user.post_data[:language],
+      :platform => user.post_data[:platform],
+      :version => user.post_data[:version],
+      :timestamp => Time.now.to_i,
+      :timezone => user.post_data[:timezone],
+      :nData => encypt.getNData
+    }
+    uri = Addressable::URI.new
+    uri.query_values = post_data
+    url = "/api/floor/fail?#{uri.query}"
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
   end
