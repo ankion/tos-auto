@@ -82,6 +82,10 @@ class User
     end
   end
 
+  def cards_full?
+    @data['totalCards'].to_i >= (@data['inventoryCapacity'].to_i + 10)
+  end
+
   def print_user_sc
     puts "session：#{@data['session']}"
     puts "uid：#{@data['uid']}"
@@ -91,6 +95,7 @@ class User
     puts "金錢：#{@data['coin']}"
     puts "靈魂石：#{@data['diamond']}"
     puts "體力：#{@data['currentStamina']}/#{@data['maxStamina']}"
+    puts "背包：#{@data['totalCards']}/#{@data['inventoryCapacity']}"
   end
 
   def print_teams(helper = nil)

@@ -104,6 +104,10 @@ class Tos
   end
 
   def get_helper_list
+    if @user.cards_full?
+      puts 'Cards is full.'
+      exit
+    end
     puts '取得隊友名單'
     page = @web.get("#{@tos_url}#{@floor.get_helpers_url(@user)}")
     #uri = URI("#{@tos_url}#{@floor.get_helpers_url(@user, 16)}")
