@@ -79,7 +79,10 @@ class Tos
     exit if choice_floor == 'q'
     return false if choice_floor == 'b'
     @floor.wave_floor = choice_floor
+    return true
+  end
 
+  def get_helper_list
     puts '取得隊友名單'
     page = @web.get("#{@tos_url}#{@floor.get_helpers_url(@user)}")
     #uri = URI("#{@tos_url}#{@floor.get_helpers_url(@user, 16)}")
@@ -93,10 +96,10 @@ class Tos
     print 'Choice helper?(b:back,q:quit)'
     choice_helper = gets.chomp
     exit if choice_helper == 'q'
-    return false if choice_helper == 'b'
+    return true if choice_helper == 'b'
     @floor.wave_helper = @user.helpers[choice_helper.to_i]
     #puts @user.helpers[choice_helper.to_i].inspect
-    return true
+    return false
   end
 
   def fighting
@@ -129,6 +132,9 @@ class Tos
     @user.parse_card_data(res_json['cards'])
     puts '======================================'
     @user.print_user_sc
+    print 'Play again?(Y/n)'
+    return true if gets.chomp == 'n'
+    return false
   end
 
   def get_error(data)
@@ -141,5 +147,8 @@ a = Tos.new
 a.login
 loop do
   next unless a.choice_floor
-  a.fighting
+  loop do
+    break if a.get_helper_list
+    break if a.fighting
+  end
 end
