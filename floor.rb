@@ -41,27 +41,49 @@ class Floor
       :bootTime => 27418.5180664063 + rand(50000)
     }
     @acs_data = {
+      # Game.runtimeData.eatGemRound
       :a => 0,
+      # Game.runtimeData.waveMovedTime
       :b => @waves_data['waves'].length,
+      # Game.runtimeData.SkillUsedTime
       :c => "#{rand(1)},#{rand(1)},#{rand(1)},#{rand(1)},#{rand(1)},#{rand(1)}",
+      # Game.runtimeData.retryTime
       :d => 0,
+      # Game.runtimeData.gameplayTime
       :e => 0,
+      # Game.runtimeData.numOfwave
       :f => @waves_data['waves'].length,
+      # Game.runtimeData.monsterNum
       :g => 0,
+      # Game.runtimeData.dieTime
       :h => 0,
+      # Game.runtimeData.monsterAttackTime
       :i => 0,
+      #
       :j => 1,
+      # Game.runtimeData.minHP
       :k => 0,
+      # Game.runtimeData.maxHP
       :l => 0,
+      #
       :n => nil,
+      # Game.runtimeData.minDamageTaken
       :o => 0,
+      # Game.runtimeData.maxDamageTaken
       :p => 0,
+      # Game.runtimeData.totalDamageTaken
       :r => 0,
+      # Game.runtimeData.gamePlayError
       :s => 0,
+      # Game.runtimeData.restoreCount
       :t => 0,
+      # Game.runtimeData.maxRecoverHP
       :u => 0,
+      # Game.runtimeData.minRecoverHP
       :v => 0,
+      # Game.runtimeData.totalRecoverHP
       :w => 0,
+      # BootLoader.upTime
       :x => 100 + rand(500)
     }
   end
