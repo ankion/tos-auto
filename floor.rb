@@ -124,7 +124,7 @@ class Floor
         wave_recover = team_hp - wave_hp
         wave_hp = team_hp
         wave_combo = 6 + rand(5)
-        wave_attack = team_attack * (wave_combo * 0.3)
+        wave_attack = team_attack * ((1 + rand(5)) + (wave_combo * 0.3))
         #puts "recover:#{wave_recover} hp:#{wave_hp} combo:#{wave_combo} attack:#{wave_attack}"
         @finish_data[:maxCombo] = wave_combo if @finish_data[:maxCombo] < wave_combo
         @finish_data[:maxAttack] = wave_attack.to_i if @finish_data[:maxAttack] < wave_attack
@@ -160,6 +160,9 @@ class Floor
       break if @acs_data[:e] < 1200
       @acs_data[:e] -= 100
     end
+    puts "maxAttack:#{@finish_data[:maxAttack]} maxCombo:#{@finish_data[:maxCombo]}"
+    puts "round:#{@acs_data[:a]} retry:#{@acs_data[:d]} die:#{@acs_data[:h]}"
+    puts "monsterAttackTime:#{@acs_data[:i]} totalDamage:#{@acs_data[:r]}"
     #puts @acs_data.inspect
   end
 
