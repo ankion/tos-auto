@@ -15,6 +15,7 @@ class Tos
     @web = Mechanize.new { |agent|
       agent.follow_meta_refresh = true
     }
+    @auto_repeat = false
   end
 
   def login
@@ -40,6 +41,9 @@ class Tos
     exit if choice_team == 'q'
     @floor.wave_team = choice_team.to_i - 1
     @floor.wave_team_data = @user.data["team#{@floor.wave_team}Array"].split(',')
+    print 'Auto replay the same floor?(y/N)'
+    choice_auto_repeat = gets.chomp
+    @auto_repeat = true if choice_auto_repeat == 'y'
   end
 
   def choice_floor
@@ -93,6 +97,12 @@ class Tos
     #puts helpers.inspect
     @user.parse_helpers_data(helpers)
     @user.print_helpers
+    if @auto_repeat
+      choice_helper = (1 + rand(3)).to_s
+      @floor.wave_helper = @user.helpers[choice_helper.to_i]
+      puts "Auto choice helper?#{choice_helper}"
+      return false
+    end
     print 'Choice helper?(b:back,q:quit)'
     choice_helper = gets.chomp
     exit if choice_helper == 'q'
@@ -132,6 +142,15 @@ class Tos
     @user.parse_card_data(res_json['cards'])
     puts '======================================'
     @user.print_user_sc
+    if @auto_repeat
+      print "Auto play again start at 5 sec."
+      5.times do
+        sleep 1.0
+        print '.'
+      end
+      print "\n"
+      return false
+    end
     print 'Play again?(Y/n)'
     return true if gets.chomp == 'n'
     return false
