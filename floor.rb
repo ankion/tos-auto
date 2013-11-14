@@ -84,7 +84,7 @@ class Floor
       # Game.runtimeData.gamePlayError
       :s => 0,
       # Game.runtimeData.restoreCount
-      :t => 0,
+      :t => 1,
       # Game.runtimeData.maxRecoverHP
       :u => 0,
       # Game.runtimeData.minRecoverHP
