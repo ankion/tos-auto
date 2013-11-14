@@ -17,6 +17,7 @@ class Tos
       agent.follow_meta_refresh = true
     }
     @auto_repeat = false
+    @last_zone = nil
   end
 
   def login
@@ -56,9 +57,12 @@ class Tos
       puts "#{index} #{z[:name]}"
     end
     print 'Choice zone?(b:back,q:quit)'
+    print "[#{@last_zone}]" if @last_zone
     choice_zone = gets.chomp
     exit if choice_zone == 'q'
     return false if choice_zone == 'b'
+    choice_zone = @last_zone if @last_zone and choice_zone == ''
+    @last_zone = choice_zone
 
     puts "Stage list"
     last_stage = nil
