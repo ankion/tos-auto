@@ -14,7 +14,7 @@ class Floor
       '5' => {:name => '暗夜深淵', :requireFloor => 20},
       '6' => {:name => '以諾塔'},
       '7' => {:name => '古神遺跡', :requireFloor => 23},
-      '8' => {:name => '旅人的記憶', :requireFloor => 80}
+      '8' => {:name => '旅人的記憶', :requireFloor => 88}
     }
     @one_time_floors = [222, 488]
     @one_time_stages = [63, 150]
