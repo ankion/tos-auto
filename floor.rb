@@ -105,6 +105,13 @@ class Floor
     @acs_data[:l] = team_hp
     @acs_data[:k] = team_hp
     @wave_fail = false
+    enemyAttackCountPerWave_array = []
+    enemyDamageTakenPerWave_array = []
+    maxDamageTakenPerWave_array = []
+    maxComboPerWave_array = []
+    minPlayerHPPerWave_array = []
+    maxPlayerAttackPerWave_array = []
+    maxAttackPerRoundDuringBossWave = 0
     puts "Monster list"
     @waves_data['waves'].each_index do |index|
       puts "第 #{index + 1} 波"
@@ -127,6 +134,12 @@ class Floor
       #puts "enemy_hp:#{enemy_hp} enemy_attack:#{enemy_attack}"
       wave_hp = team_hp
       #@acs_data[:g] += @waves_data['waves'][index]['enemies'].length
+      enemyAttackCountPerWave = 0
+      enemyDamageTakenPerWave = 0
+      maxDamageTakenPerWave = 0
+      maxComboPerWave = 0
+      minPlayerHPPerWave = wave_hp
+      maxPlayerAttackPerWave = 0
       loop do
         break if @acs_data[:a] > @max_round
         @acs_data[:a] += 1
@@ -136,7 +149,9 @@ class Floor
         wave_attack = team_attack * ((1 + rand(5)) + (wave_combo * 0.3))
         #puts "recover:#{wave_recover} hp:#{wave_hp} combo:#{wave_combo} attack:#{wave_attack}"
         @finish_data[:maxCombo] = wave_combo if @finish_data[:maxCombo] < wave_combo
+        maxComboPerWave = wave_combo if maxComboPerWave < wave_combo
         @finish_data[:maxAttack] = wave_attack.to_i if @finish_data[:maxAttack] < wave_attack
+        maxPlayerAttackPerWave = wave_attack.to_i if maxPlayerAttackPerWave < wave_attack
         if wave_recover > 0
           @acs_data[:u] = wave_recover if @acs_data[:u] < wave_recover
           @acs_data[:v] = wave_recover if @acs_data[:v] > wave_recover or @acs_data[:v] == 0
@@ -144,15 +159,19 @@ class Floor
         end
         enemy_hp -= wave_attack
         break if enemy_hp < 1
-        if rand(2) == 1
+        if rand(5) < 4
           wave_hp -= enemy_attack
           wave_hp = rand(100) + 1 if wave_hp < 1
           wave_damage = team_hp - wave_hp
           @acs_data[:k] = wave_hp if @acs_data[:k] > wave_hp
+          minPlayerHPPerWave = wave_hp if minPlayerHPPerWave > wave_hp
           @acs_data[:r] += wave_damage
+          enemyDamageTakenPerWave += wave_damage
           @acs_data[:p] = wave_damage if @acs_data[:p] < wave_damage
+          maxDamageTakenPerWave = wave_damage if maxDamageTakenPerWave < wave_damage
           @acs_data[:o] = wave_damage if @acs_data[:o] > wave_damage or @acs_data[:o] == 0
           @acs_data[:i] += 1
+          enemyAttackCountPerWave += 1
         end
       end
       if @acs_data[:a] > @max_round
@@ -163,7 +182,22 @@ class Floor
         break
       end
       @acs_data[:b] += 1
+      enemyAttackCountPerWave_array << enemyAttackCountPerWave
+      enemyDamageTakenPerWave_array << enemyDamageTakenPerWave
+      maxDamageTakenPerWave_array << maxDamageTakenPerWave
+      maxComboPerWave_array << maxComboPerWave
+      minPlayerHPPerWave_array << minPlayerHPPerWave
+      maxPlayerAttackPerWave_array << maxPlayerAttackPerWave
+      maxAttackPerRoundDuringBossWave = maxPlayerAttackPerWave
+      maxAttackPerRoundDuringBossWave = 0 if @acs_data[:b] != @acs_data[:f]
     end
+    @acs_data[:y] = enemyAttackCountPerWave_array.join('|')
+    @acs_data[:z] = enemyDamageTakenPerWave_array.join('|')
+    @acs_data[:ab] = maxDamageTakenPerWave_array.join('|')
+    @acs_data[:ac] = maxComboPerWave_array.join('|')
+    @acs_data[:ad] = minPlayerHPPerWave_array.join('|')
+    @acs_data[:ae] = maxPlayerAttackPerWave_array.join('|')
+    @acs_data[:am] = maxAttackPerRoundDuringBossWave
     floor_data = @floors.select {|k| k[:id] == @wave_floor}
     #puts "floor:#{floor_data.first[:name]}"
     if floor_data.first[:name].include? '地獄級'
