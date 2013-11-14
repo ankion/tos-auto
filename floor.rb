@@ -17,6 +17,7 @@ class Floor
       '8' => {:name => '旅人的記憶', :requireFloor => 80}
     }
     @one_time_floors = [222, 488]
+    @one_time_stages = [63, 150]
     @stages = []
     @floors = []
     @waves_data = nil
@@ -32,6 +33,10 @@ class Floor
 
   def one_time_floor?
     @one_time_floors.include? @wave_floor.to_i
+  end
+
+  def one_time_stage?(stage)
+    @one_time_stages.include? stage.to_i
   end
 
   def reset_complete

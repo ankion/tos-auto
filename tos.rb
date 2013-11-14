@@ -64,6 +64,7 @@ class Tos
     last_stage = nil
     stages = @floor.stages.select {|k| k[:zone] == choice_zone}
     stages.each do |s|
+      next if @floor.one_time_stage? s[:id]
       break unless @user.stage_can_enter? s[:id]
       unless s[:start_at] == ''
         next if Time.now.to_i < Time.at(s[:start_at].to_i).to_i
