@@ -206,7 +206,9 @@ class Tos
           @user.data['coin'] = res_json['user']['coin']
           @user.data['totalCards'] = res_json['user']['totalCards']
         end
-      elsif @auto_sell
+      end
+
+      if @auto_sell
         loop do
           targetCardIds = @user.get_sell_card(@target_cards)
           break if targetCardIds.length == 0

@@ -116,6 +116,7 @@ class User
     @loots.each do |l|
       next unless l['card']
       next if l['selled']
+      next if l['merged']
       next unless target_cards.include? l['card']['monsterId']
       targetCardIds << l['card']['cardId']
       l['selled'] = true
