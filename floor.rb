@@ -196,6 +196,14 @@ class Floor
       maxAttackPerRoundDuringBossWave = maxPlayerAttackPerWave
       maxAttackPerRoundDuringBossWave = 0 if @acs_data[:b] != @acs_data[:f]
     end
+    (@acs_data[:f] - @acs_data[:b]).times do
+      enemyAttackCountPerWave_array << 0
+      enemyDamageTakenPerWave_array << 0
+      maxDamageTakenPerWave_array << 0
+      maxComboPerWave_array << 0
+      minPlayerHPPerWave_array << 0
+      maxPlayerAttackPerWave_array << 0
+    end
     @acs_data[:y] = enemyAttackCountPerWave_array.join('|')
     @acs_data[:z] = enemyDamageTakenPerWave_array.join('|')
     @acs_data[:ab] = maxDamageTakenPerWave_array.join('|')
