@@ -43,9 +43,12 @@ class Tos
     #puts @user.cards['10'].inspect
     #@user.print_teams
     @user.print_teams
+    auto_team = @user.auto_get_team
     print 'Choice team?'
+    print "[#{auto_team}]" if auto_team
     choice_team = gets.chomp
     exit if choice_team == 'q'
+    choice_team = auto_team if auto_team and choice_team == ''
     @floor.wave_team = choice_team.to_i - 1
     @floor.wave_team_data = @user.data["team#{@floor.wave_team}Array"].split(',')
     print 'Auto replay the same floor?(y/N)'
@@ -192,9 +195,9 @@ class Tos
           #puts "sourceCardId:#{sourceCardId}"
           next unless sourceCardId
           loop do
-            targetCardIds = @user.get_merge_card(s, @target_cards)
+            targetCardIds = @user.get_merge_card(sourceCardId, @target_cards)
             break if targetCardIds.length == 0
-            puts "lv#{@user.cards[sourceCardId][:level]} #{@user.monster.data[s][:monsterName]} <= (#{targetCardIds.join(',')})"
+            puts "#{sourceCardId}lv#{@user.cards[sourceCardId][:level]} #{@user.monster.data[s][:monsterName]} <= (#{targetCardIds.join(',')})"
             page = @web.get("#{@tos_url}#{@user.get_merge_url(sourceCardId, targetCardIds)}")
           end
           res_json = JSON.parse(page.body)

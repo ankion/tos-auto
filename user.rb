@@ -164,7 +164,7 @@ class User
 
   def get_merge_card(sourceCardId, target_cards)
     targetCardIds = []
-    source = @monster.data[sourceCardId]
+    source = @monster.data[@cards[sourceCardId][:monsterId]]
     #puts "source:#{source.inspect}"
     @loots.each do |l|
       l['merged'] = true if sourceCardId == l['card']['cardId']
@@ -202,6 +202,14 @@ class User
     url = "/api/card/merge?#{uri.query}"
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
+  end
+
+  def auto_get_team
+    (0..4).each do |t|
+      next if @data["team#{t}Array"] == '0,0,0,0,0'
+      return (t + 1).to_s
+    end
+    return nil
   end
 
   def print_teams(helper = nil)
