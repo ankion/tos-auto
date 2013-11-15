@@ -153,6 +153,7 @@ class Tos
     @floor.set_complete(@user)
     #puts finish_data.inspect
     #puts acs_data.inspect
+    @floor.acs_data[:e] = 10.0 if @floor.wave_fail and not @floor.one_time_floor?
     puts "waiting complete.(#{@floor.acs_data[:e]})"
     print "[                                        ]\r["
     40.times do

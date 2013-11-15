@@ -123,20 +123,7 @@ class Floor
       #puts waves[index]['enemies'].inspect
       enemy_hp = 0
       enemy_attack = 0
-      @waves_data['waves'][index]['enemies'].each do |e|
-        monster = user.monster.data[e['monsterId']]
-        enemy_hp += monster[:minEnemyHP].to_i + (monster[:incEnemyHP].to_i * e['level'].to_i)
-        enemy_attack += monster[:minEnemyAttack].to_i + (monster[:incEnemyAttack].to_i * e['level'].to_i)
 
-        #puts e.inspect
-        puts "\tlv#{e['level']} #{user.monster.data[e['monsterId']][:monsterName]}"
-        if e['lootItem']
-          loot = e['lootItem']
-          puts "\t\t掉落: lv#{loot['card']['level']} #{user.monster.data[loot['card']['monsterId']][:monsterName]}" if loot['type'] == 'monster'
-          puts "\t\t掉落: #{loot['amount']} Gold" if loot['type'] == 'money'
-        end
-      end
-      #puts "enemy_hp:#{enemy_hp} enemy_attack:#{enemy_attack}"
       wave_hp = team_hp
       #@acs_data[:g] += @waves_data['waves'][index]['enemies'].length
       enemyAttackCountPerWave = 0
@@ -145,38 +132,57 @@ class Floor
       maxComboPerWave = 0
       minPlayerHPPerWave = wave_hp
       maxPlayerAttackPerWave = 0
-      loop do
+
+      @waves_data['waves'][index]['enemies'].each do |e|
         break if @acs_data[:a] > @max_round
-        @acs_data[:a] += 1
-        wave_recover = team_hp - wave_hp
-        wave_hp = team_hp
-        wave_combo = 6 + rand(9)
-        wave_attack = team_attack * ((1 + rand(5)) + (wave_combo * 0.3))
-        #puts "recover:#{wave_recover} hp:#{wave_hp} combo:#{wave_combo} attack:#{wave_attack}"
-        @finish_data[:maxCombo] = wave_combo if @finish_data[:maxCombo] < wave_combo
-        maxComboPerWave = wave_combo if maxComboPerWave < wave_combo
-        @finish_data[:maxAttack] = wave_attack.to_i if @finish_data[:maxAttack] < wave_attack
-        maxPlayerAttackPerWave = wave_attack.to_i if maxPlayerAttackPerWave < wave_attack
-        if wave_recover > 0
-          @acs_data[:u] = wave_recover if @acs_data[:u] < wave_recover
-          @acs_data[:v] = wave_recover if @acs_data[:v] > wave_recover or @acs_data[:v] == 0
-          @acs_data[:w] += wave_recover
+        monster = user.monster.data[e['monsterId']]
+        enemy_hp = monster[:minEnemyHP].to_i + (monster[:incEnemyHP].to_i * e['level'].to_i)
+        enemy_attack = monster[:minEnemyAttack].to_i + (monster[:incEnemyAttack].to_i * e['level'].to_i)
+        enemy_defense = monster[:minEnemyDefense].to_i + (monster[:incEnemyDefense].to_i * e['level'].to_i)
+
+        #puts e.inspect
+        puts "\tlv#{e['level']} #{user.monster.data[e['monsterId']][:monsterName]}"
+        if e['lootItem']
+          loot = e['lootItem']
+          puts "\t\t掉落: lv#{loot['card']['level']} #{user.monster.data[loot['card']['monsterId']][:monsterName]}" if loot['type'] == 'monster'
+          puts "\t\t掉落: #{loot['amount']} Gold" if loot['type'] == 'money'
         end
-        enemy_hp -= wave_attack
-        break if enemy_hp < 1
-        if rand(5) < 4
-          wave_hp -= enemy_attack
-          wave_hp = rand(100) + 1 if wave_hp < 1
-          wave_damage = team_hp - wave_hp
-          @acs_data[:k] = wave_hp if @acs_data[:k] > wave_hp
-          minPlayerHPPerWave = wave_hp if minPlayerHPPerWave > wave_hp
-          @acs_data[:r] += wave_damage
-          enemyDamageTakenPerWave += wave_damage
-          @acs_data[:p] = wave_damage if @acs_data[:p] < wave_damage
-          maxDamageTakenPerWave = wave_damage if maxDamageTakenPerWave < wave_damage
-          @acs_data[:o] = wave_damage if @acs_data[:o] > wave_damage or @acs_data[:o] == 0
-          @acs_data[:i] += 1
-          enemyAttackCountPerWave += 1
+        #puts "enemy_hp:#{enemy_hp} enemy_attack:#{enemy_attack}"
+        loop do
+          break if @acs_data[:a] > @max_round
+          @acs_data[:a] += 1
+          wave_recover = team_hp - wave_hp
+          wave_hp = team_hp
+          wave_combo = 6 + rand(9)
+          wave_attack = team_attack * ((1 + rand(5)) + (wave_combo * 0.3))
+          #puts "recover:#{wave_recover} hp:#{wave_hp} combo:#{wave_combo} attack:#{wave_attack}"
+          enemy_damage = wave_attack - enemy_defense
+          enemy_damage = 1 if enemy_damage < 1
+          @finish_data[:maxCombo] = wave_combo if @finish_data[:maxCombo] < wave_combo
+          maxComboPerWave = wave_combo if maxComboPerWave < wave_combo
+          @finish_data[:maxAttack] = enemy_damage.to_i if @finish_data[:maxAttack] < enemy_damage
+          maxPlayerAttackPerWave = enemy_damage.to_i if maxPlayerAttackPerWave < enemy_damage
+          if wave_recover > 0
+            @acs_data[:u] = wave_recover if @acs_data[:u] < wave_recover
+            @acs_data[:v] = wave_recover if @acs_data[:v] > wave_recover or @acs_data[:v] == 0
+            @acs_data[:w] += wave_recover
+          end
+          enemy_hp -= enemy_damage
+          break if enemy_hp < 1
+          if rand(5) < 3
+            wave_hp -= enemy_attack
+            wave_hp = rand(100) + 1 if wave_hp < 1
+            wave_damage = team_hp - wave_hp
+            @acs_data[:k] = wave_hp if @acs_data[:k] > wave_hp
+            minPlayerHPPerWave = wave_hp if minPlayerHPPerWave > wave_hp
+            @acs_data[:r] += wave_damage
+            enemyDamageTakenPerWave += wave_damage
+            @acs_data[:p] = wave_damage if @acs_data[:p] < wave_damage
+            maxDamageTakenPerWave = wave_damage if maxDamageTakenPerWave < wave_damage
+            @acs_data[:o] = wave_damage if @acs_data[:o] > wave_damage or @acs_data[:o] == 0
+            @acs_data[:i] += 1
+            enemyAttackCountPerWave += 1
+          end
         end
       end
       if @acs_data[:a] > @max_round
@@ -213,13 +219,17 @@ class Floor
     @acs_data[:am] = maxAttackPerRoundDuringBossWave
     floor_data = @floors.select {|k| k[:id] == @wave_floor}
     #puts "floor:#{floor_data.first[:name]}"
-    if floor_data.first[:name].include? '地獄級'
-      puts 'Hell level!!!!!'
-      @acs_data[:d] += 1 + rand(5)
-      @acs_data[:h] = @acs_data[:d]
-      @acs_data[:c] = "#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)}"
-    end
-    @acs_data[:e] = (Time.now + (((6 + rand(3)) * (@acs_data[:a] + @acs_data[:d]) ) * 3)) - Time.now
+    #if floor_data.first[:name].include? '地獄級'
+      #puts 'Hell level!!!!!'
+      #@acs_data[:d] += 1 + rand(5)
+      #@acs_data[:h] = @acs_data[:d]
+      #@acs_data[:c] = "#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)}"
+    #end
+    bonus_time = 1
+    bonus_time += 1 if @acs_data[:a] > 20
+    bonus_time += 1 if @acs_data[:a] > 40
+
+    @acs_data[:e] = (Time.now + (((6 + rand(3)) * (@acs_data[:a] + @acs_data[:d]) ) * bonus_time)) - Time.now
     #loop do
       #break if @acs_data[:e] < 1200
       #@acs_data[:e] -= 100
