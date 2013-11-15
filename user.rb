@@ -98,6 +98,46 @@ class User
     puts "背包：#{@data['totalCards']}/#{@data['inventoryCapacity']}"
   end
 
+  def print_loots(loots)
+    puts '戰勵品：'
+    loots.each do |l|
+      if l['type'] == 'monster'
+        puts "#{l['card']['cardId']} lv#{l['card']['level']} #{@monster.data[l['card']['monsterId']][:monsterName]}"
+      else
+        puts "#{loot['amount']} Gold"
+      end
+    end
+  end
+
+  def get_sell_card(sell_cards, loots)
+    targetCardIds = []
+    loots.each do |l|
+      next unless l['card']
+      targetCardIds << l['card']['cardId'] if sell_cards.include? l['card']['monsterId']
+    end
+    return targetCardIds
+  end
+
+  def get_sell_url(targetCardIds)
+    encypt = Checksum.new
+    post_data = {
+      :targetCardIds => targetCardIds.join(','),
+      :uid => @data['uid'],
+      :session => @data['session'],
+      :language => @post_data[:language],
+      :platform => @post_data[:platform],
+      :version => @post_data[:version],
+      :timestamp => Time.now.to_i,
+      :timezone => @post_data[:timezone],
+      :nData => encypt.getNData
+    }
+    uri = Addressable::URI.new
+    uri.query_values = post_data
+    url = "/api/card/sell?#{uri.query}"
+    #puts url
+    return "#{url}&hash=#{encypt.getHash(url, '')}"
+  end
+
   def print_teams(helper = nil)
     (0..4).each do |t|
       total_hp = 0

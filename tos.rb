@@ -17,6 +17,8 @@ class Tos
       agent.follow_meta_refresh = true
     }
     @auto_repeat = false
+    @auto_sell = Settings['auto_sell'] || false
+    @sell_cards = Settings['sell_cards'].split(',') || []
     @last_zone = nil
   end
 
@@ -176,6 +178,14 @@ class Tos
       puts "金錢：#{res_json['data']['coinGain']}"
       @user.parse_card_data(res_json['cards'])
       @user.data = res_json['user']
+      @user.print_loots(res_json['data']['loots'])
+      if @auto_sell
+        targetCardIds = @user.get_sell_card(@sell_cards, res_json['data']['loots'])
+        if targetCardIds.length > 0
+          puts "Selling cards(#{targetCardIds.join(',')})"
+          page = @web.get("#{@tos_url}#{@user.get_sell_url(targetCardIds)}")
+        end
+      end
     end
     puts '======================================'
     @user.print_user_sc
