@@ -28,7 +28,7 @@ class Floor
     @wave_fail = false
     @finish_data = nil
     @acs_data = nil
-    @max_round = 150
+    @max_round = 100
   end
 
   def one_time_floor?
@@ -219,7 +219,7 @@ class Floor
       @acs_data[:h] = @acs_data[:d]
       @acs_data[:c] = "#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)}"
     end
-    @acs_data[:e] = (Time.now + ((6 + rand(3)) * (@acs_data[:a] + @acs_data[:d]) )) - Time.now
+    @acs_data[:e] = (Time.now + (((6 + rand(3)) * (@acs_data[:a] + @acs_data[:d]) ) * 3)) - Time.now
     #loop do
       #break if @acs_data[:e] < 1200
       #@acs_data[:e] -= 100
