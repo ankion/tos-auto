@@ -150,7 +150,7 @@ class Floor
         @acs_data[:a] += 1
         wave_recover = team_hp - wave_hp
         wave_hp = team_hp
-        wave_combo = 6 + rand(5)
+        wave_combo = 6 + rand(9)
         wave_attack = team_attack * ((1 + rand(5)) + (wave_combo * 0.3))
         #puts "recover:#{wave_recover} hp:#{wave_hp} combo:#{wave_combo} attack:#{wave_attack}"
         @finish_data[:maxCombo] = wave_combo if @finish_data[:maxCombo] < wave_combo
