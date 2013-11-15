@@ -18,7 +18,9 @@ class Tos
     }
     @auto_repeat = false
     @auto_sell = Settings['auto_sell'] || false
-    @sell_cards = Settings['sell_cards'].split(',') || []
+    @target_cards = Settings['target_cards'].split(',') || []
+    @auto_merge = Settings['auto_merge'] || false
+    @source_cards = Settings['source_cards'].split(',') || []
     @last_zone = nil
   end
 
@@ -32,6 +34,7 @@ class Tos
     exit get_error(res_json) if res_json['respond'].to_i != 1
     puts '取得資料'
     @user.data = res_json['user']
+    @user.bookmarks = res_json['user']['bookmarks']
     @user.parse_card_data(res_json['cards'])
     @floor.parse_floor_data(res_json['data'])
     @user.monster.parse_data(res_json['data']['monsters'])
@@ -179,12 +182,38 @@ class Tos
       puts "金錢：#{res_json['data']['coinGain']}"
       @user.parse_card_data(res_json['cards'])
       @user.data = res_json['user']
-      @user.print_loots(res_json['data']['loots'])
-      if @auto_sell
-        targetCardIds = @user.get_sell_card(@sell_cards, res_json['data']['loots'])
-        if targetCardIds.length > 0
+      @user.loots = res_json['data']['loots']
+      @user.print_loots
+
+      if @auto_merge
+        puts "Mergeing cards"
+        @source_cards.each do |s|
+          sourceCardId = @user.get_source_card s
+          #puts "sourceCardId:#{sourceCardId}"
+          next unless sourceCardId
+          loop do
+            targetCardIds = @user.get_merge_card(s, @target_cards)
+            break if targetCardIds.length == 0
+            puts "lv#{@user.cards[sourceCardId][:level]} #{@user.monster.data[s][:monsterName]} <= (#{targetCardIds.join(',')})"
+            page = @web.get("#{@tos_url}#{@user.get_merge_url(sourceCardId, targetCardIds)}")
+          end
+          res_json = JSON.parse(page.body)
+          break get_error(res_json) if res_json['respond'].to_i != 1
+          @user.parse_card_data(res_json['cards'])
+          @user.data['coin'] = res_json['user']['coin']
+          @user.data['totalCards'] = res_json['user']['totalCards']
+        end
+      elsif @auto_sell
+        loop do
+          targetCardIds = @user.get_sell_card(@target_cards)
+          break if targetCardIds.length == 0
           puts "Selling cards(#{targetCardIds.join(',')})"
           page = @web.get("#{@tos_url}#{@user.get_sell_url(targetCardIds)}")
+          res_json = JSON.parse(page.body)
+          break get_error(res_json) if res_json['respond'].to_i != 1
+          @user.parse_card_data(res_json['cards'])
+          @user.data['coin'] = res_json['user']['coin']
+          @user.data['totalCards'] = res_json['user']['totalCards']
         end
       end
     end

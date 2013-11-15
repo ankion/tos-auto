@@ -5,7 +5,7 @@ require "./monster"
 require "./setting"
 
 class User
-  attr_accessor :monster, :data, :cards, :post_data, :helpers
+  attr_accessor :monster, :data, :cards, :post_data, :helpers, :loots, :bookmarks
 
   def initialize
     @monster = Monster.new
@@ -58,6 +58,8 @@ class User
     @data = nil
     @cards = {}
     @helpers = nil
+    @loots = nil
+    @bookmarks = nil
   end
 
   def stage_can_enter?(stage)
@@ -98,22 +100,26 @@ class User
     puts "背包：#{@data['totalCards']}/#{@data['inventoryCapacity']}"
   end
 
-  def print_loots(loots)
+  def print_loots
     puts '戰勵品：'
-    loots.each do |l|
+    @loots.each do |l|
       if l['type'] == 'monster'
         puts "#{l['card']['cardId']} lv#{l['card']['level']} #{@monster.data[l['card']['monsterId']][:monsterName]}"
       else
-        puts "#{loot['amount']} Gold"
+        puts "#{l['amount']} Gold"
       end
     end
   end
 
-  def get_sell_card(sell_cards, loots)
+  def get_sell_card(target_cards)
     targetCardIds = []
-    loots.each do |l|
+    @loots.each do |l|
       next unless l['card']
-      targetCardIds << l['card']['cardId'] if sell_cards.include? l['card']['monsterId']
+      next if l['selled']
+      next unless target_cards.include? l['card']['monsterId']
+      targetCardIds << l['card']['cardId']
+      l['selled'] = true
+      break if targetCardIds.length == 10
     end
     return targetCardIds
   end
@@ -134,6 +140,66 @@ class User
     uri = Addressable::URI.new
     uri.query_values = post_data
     url = "/api/card/sell?#{uri.query}"
+    #puts url
+    return "#{url}&hash=#{encypt.getHash(url, '')}"
+  end
+
+  def print_cards
+    @cards.each do |card|
+      puts card[1].inspect
+    end
+  end
+
+  def get_source_card(source)
+    sourceCardId = nil
+    @cards.each do |card|
+      monster = @monster.data[card[1][:monsterId]]
+      next if source.to_i != monster[:monsterId].to_i
+      next if card[1][:level].to_i == monster[:maxLevel].to_i
+      sourceCardId = card[1][:cardId]
+      break
+    end
+    return sourceCardId
+  end
+
+  def get_merge_card(sourceCardId, target_cards)
+    targetCardIds = []
+    source = @monster.data[sourceCardId]
+    #puts "source:#{source.inspect}"
+    @loots.each do |l|
+      l['merged'] = true if sourceCardId == l['card']['cardId']
+      next if l['merged']
+      target = @monster.data[l['card']['monsterId']]
+      #puts "target:#{target.inspect}"
+      next unless target_cards.include? target[:monsterId]
+      #puts "source:#{source[:attribute]} target:#{target[:attribute]}"
+      if source[:attribute] == target[:attribute]
+        targetCardIds << l['card']['cardId']
+        l['merged'] = true
+        break if targetCardIds.length == 5
+      end
+    end
+    return targetCardIds
+  end
+
+  def get_merge_url(sourceCardId, targetCardIds)
+    encypt = Checksum.new
+    post_data = {
+      :sourceCardId => sourceCardId,
+      :targetCardIds => targetCardIds.join(','),
+      :uid => @data['uid'],
+      :session => @data['session'],
+      :language => @post_data[:language],
+      :platform => @post_data[:platform],
+      :version => @post_data[:version],
+      :timestamp => Time.now.to_i,
+      :timezone => @post_data[:timezone],
+      :bookmarks => @bookmarks.join(','),
+      :nData => encypt.getNData
+    }
+    uri = Addressable::URI.new
+    uri.query_values = post_data
+    url = "/api/card/merge?#{uri.query}"
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
   end
@@ -223,6 +289,7 @@ class User
     data.each do |d|
       card_data = d.split('|')
       card = {
+        :cardId => card_data[0],
         :monsterId => card_data[1],
         :exp => card_data[2],
         :level => card_data[3],
