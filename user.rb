@@ -151,12 +151,13 @@ class User
     end
   end
 
-  def get_source_card(source)
+  def get_source_card(source, max_lv)
     sourceCardId = nil
     @cards.each do |card|
       monster = @monster.data[card[1][:monsterId]]
       next if source.to_i != monster[:monsterId].to_i
       next if card[1][:level].to_i == monster[:maxLevel].to_i
+      next if card[1][:level].to_i > max_lv
       sourceCardId = card[1][:cardId]
       break
     end

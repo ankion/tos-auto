@@ -20,6 +20,7 @@ class Tos
     @auto_sell = Settings['auto_sell'] || false
     @target_cards = Settings['target_cards'].split(',') || []
     @auto_merge = Settings['auto_merge'] || false
+    @max_merge_lv = Settings['max_merge_lv'] || 99
     @source_cards = Settings['source_cards'].split(',') || []
     @last_zone = nil
   end
@@ -191,7 +192,7 @@ class Tos
       if @auto_merge
         puts "Mergeing cards"
         @source_cards.each do |s|
-          sourceCardId = @user.get_source_card s
+          sourceCardId = @user.get_source_card(s, @max_merge_lv)
           #puts "sourceCardId:#{sourceCardId}"
           next unless sourceCardId
           loop do
