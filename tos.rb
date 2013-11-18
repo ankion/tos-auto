@@ -197,7 +197,7 @@ class Tos
           loop do
             targetCardIds = @user.get_merge_card(sourceCardId, @target_cards)
             break if targetCardIds.length == 0
-            puts "#{sourceCardId}lv#{@user.cards[sourceCardId][:level]} #{@user.monster.data[s][:monsterName]} <= (#{targetCardIds.join(',')})"
+            puts "#{sourceCardId} lv#{@user.cards[sourceCardId][:level]} #{@user.monster.data[s][:monsterName]} <= (#{targetCardIds.join(',')})"
             page = @web.get("#{@tos_url}#{@user.get_merge_url(sourceCardId, targetCardIds)}")
           end
           res_json = JSON.parse(page.body)

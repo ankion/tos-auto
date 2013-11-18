@@ -155,6 +155,7 @@ class Floor
           wave_hp = team_hp
           wave_combo = 6 + rand(9)
           wave_attack = team_attack * ((1 + rand(5)) + (wave_combo * 0.3))
+          wave_attack *= (1 + rand(5))
           #puts "recover:#{wave_recover} hp:#{wave_hp} combo:#{wave_combo} attack:#{wave_attack}"
           enemy_damage = wave_attack - enemy_defense
           enemy_damage = 1 if enemy_damage < 1
