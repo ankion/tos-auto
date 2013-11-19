@@ -22,6 +22,7 @@ class Tos
     @auto_merge = Settings['auto_merge'] || false
     @max_merge_lv = Settings['max_merge_lv'] || 99
     @source_cards = Settings['source_cards'].split(',') || []
+    @master_cards = Settings['master_cards'].split(',') || []
     @last_zone = nil
   end
 
@@ -192,20 +193,26 @@ class Tos
       if @auto_merge
         puts "Mergeing cards"
         @source_cards.each do |s|
-          sourceCardId = @user.get_source_card(s, @max_merge_lv)
+          sourceCardId = @user.get_source_card(s)
           #puts "sourceCardId:#{sourceCardId}"
           next unless sourceCardId
           loop do
             targetCardIds = @user.get_merge_card(sourceCardId, @target_cards)
             break if targetCardIds.length == 0
-            puts "#{sourceCardId} lv#{@user.cards[sourceCardId][:level]} #{@user.monster.data[s][:monsterName]} <= (#{targetCardIds.join(',')})"
+            print "#{sourceCardId} lv#{@user.cards[sourceCardId][:level]} #{@user.monster.data[s][:monsterName]} <= ("
+            targetCardIds.each do |t|
+              card = @user.cards[t]
+              print "," unless t == targetCardIds.first
+              print "lv#{card[:level]} #{@user.monster.data[card[:monsterId]][:monsterName]}"
+            end
+            print ")\n"
             page = @web.get("#{@tos_url}#{@user.get_merge_url(sourceCardId, targetCardIds)}")
+            res_json = JSON.parse(page.body)
+            break get_error(res_json) if res_json['respond'].to_i != 1
+            @user.parse_card_data(res_json['cards'])
+            @user.data['coin'] = res_json['user']['coin']
+            @user.data['totalCards'] = res_json['user']['totalCards']
           end
-          res_json = JSON.parse(page.body)
-          break get_error(res_json) if res_json['respond'].to_i != 1
-          @user.parse_card_data(res_json['cards'])
-          @user.data['coin'] = res_json['user']['coin']
-          @user.data['totalCards'] = res_json['user']['totalCards']
         end
       end
 
@@ -220,6 +227,32 @@ class Tos
           @user.parse_card_data(res_json['cards'])
           @user.data['coin'] = res_json['user']['coin']
           @user.data['totalCards'] = res_json['user']['totalCards']
+        end
+      end
+
+      if @auto_merge
+        puts "Mergeing master cards" if @master_cards.length > 0
+        @master_cards.each do |s|
+          sourceCardId = @user.get_source_card(s)
+          #puts "sourceCardId:#{sourceCardId}"
+          next unless sourceCardId
+          loop do
+            targetCardIds = @user.get_master_merge_card(sourceCardId, @source_cards, @max_merge_lv)
+            break if targetCardIds.length == 0
+            print "#{sourceCardId} lv#{@user.cards[sourceCardId][:level]} #{@user.monster.data[s][:monsterName]} <= ("
+            targetCardIds.each do |t|
+              card = @user.cards[t]
+              print "," unless t == targetCardIds.first
+              print "lv#{card[:level]} #{@user.monster.data[card[:monsterId]][:monsterName]}"
+            end
+            print ")\n"
+            page = @web.get("#{@tos_url}#{@user.get_merge_url(sourceCardId, targetCardIds)}")
+            res_json = JSON.parse(page.body)
+            break get_error(res_json) if res_json['respond'].to_i != 1
+            @user.parse_card_data(res_json['cards'])
+            @user.data['coin'] = res_json['user']['coin']
+            @user.data['totalCards'] = res_json['user']['totalCards']
+          end
         end
       end
     end

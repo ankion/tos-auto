@@ -11,3 +11,4 @@ defaults: &defaults
   auto_merge: false
   source_cards: '86,87,88,89,90,91,92,93,94,95'
   max_merge_lv: 10
+  master_cards: ''

@@ -151,13 +151,12 @@ class User
     end
   end
 
-  def get_source_card(source, max_lv)
+  def get_source_card(source)
     sourceCardId = nil
     @cards.each do |card|
       monster = @monster.data[card[1][:monsterId]]
       next if source.to_i != monster[:monsterId].to_i
       next if card[1][:level].to_i == monster[:maxLevel].to_i
-      next if card[1][:level].to_i > max_lv
       sourceCardId = card[1][:cardId]
       break
     end
@@ -178,6 +177,28 @@ class User
       if source[:attribute] == target[:attribute]
         targetCardIds << l['card']['cardId']
         l['merged'] = true
+        break if targetCardIds.length == 5
+      end
+    end
+    return targetCardIds
+  end
+
+  def get_master_merge_card(sourceCardId, target_cards, max_lv = 0)
+    targetCardIds = []
+    source = @monster.data[@cards[sourceCardId][:monsterId]]
+    #puts "source:#{source.inspect}"
+    @cards.each do |l|
+      l[1][:merged] = true if sourceCardId == l[1][:cardId]
+      next if l[1][:merged]
+      next if @bookmarks.include? l[1][:cardId]
+      target = @monster.data[l[1][:monsterId]]
+      #puts "target:#{target.inspect}"
+      next unless target_cards.include? target[:monsterId]
+      #puts "source:#{source[:attribute]} target:#{target[:attribute]}"
+      next if l[1][:level].to_i < max_lv and l[1][:level].to_i < target[:maxLevel].to_i
+      if source[:attribute] == target[:attribute]
+        l[1][:merged] = true
+        targetCardIds << l[1][:cardId]
         break if targetCardIds.length == 5
       end
     end
