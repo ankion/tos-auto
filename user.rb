@@ -317,6 +317,7 @@ class User
   end
 
   def parse_card_data(data)
+    @cards = {}
     data.each do |d|
       card_data = d.split('|')
       card = {
