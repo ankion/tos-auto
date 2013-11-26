@@ -135,13 +135,13 @@ class Floor
 
       @waves_data['waves'][index]['enemies'].each do |e|
         break if @acs_data[:a] > @max_round
-        monster = user.monster.data[e['monsterId']]
+        monster = user.monster.data[e['monsterId'].to_s]
         enemy_hp = monster[:minEnemyHP].to_i + (monster[:incEnemyHP].to_i * e['level'].to_i)
         enemy_attack = monster[:minEnemyAttack].to_i + (monster[:incEnemyAttack].to_i * e['level'].to_i)
         enemy_defense = monster[:minEnemyDefense].to_i + (monster[:incEnemyDefense].to_i * e['level'].to_i)
 
         #puts e.inspect
-        puts "\tlv#{e['level']} #{user.monster.data[e['monsterId']][:monsterName]}"
+        puts "\tlv#{e['level']} #{monster[:monsterName]}"
         if e['lootItem']
           loot = e['lootItem']
           puts "\t\t掉落: lv#{loot['card']['level']} #{user.monster.data[loot['card']['monsterId']][:monsterName]}" if loot['type'] == 'monster'
