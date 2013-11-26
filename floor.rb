@@ -17,7 +17,7 @@ class Floor
       '8' => {:name => '旅人的記憶', :requireFloor => 88}
     }
     @one_time_floors = [222, 488]
-    @one_time_stages = [63, 150]
+    @one_time_stages = [63, 150, 132]
     @stages = []
     @floors = []
     @waves_data = nil
