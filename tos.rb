@@ -46,6 +46,10 @@ class Tos
     @user.monster.parse_data(res_json['data']['monsters'])
     puts '======================================'
     @user.print_user_sc
+    print 'Auto replay the same floor?(y/N)'
+    choice_auto_repeat = gets.chomp
+    exit if choice_auto_repeat == 'q'
+    @auto_repeat = true if choice_auto_repeat == 'y'
     #puts @user.cards['10'].inspect
     #@user.print_teams
     @user.print_teams
@@ -57,9 +61,6 @@ class Tos
     choice_team = auto_team if auto_team and choice_team == ''
     @floor.wave_team = choice_team.to_i - 1
     @floor.wave_team_data = @user.data["team#{@floor.wave_team}Array"].split(',')
-    print 'Auto replay the same floor?(y/N)'
-    choice_auto_repeat = gets.chomp
-    @auto_repeat = true if choice_auto_repeat == 'y'
   end
 
   def choice_floor
