@@ -117,6 +117,7 @@ class Floor
     minPlayerHPPerWave_array = []
     maxPlayerAttackPerWave_array = []
     maxAttackPerRoundDuringBossWave = 0
+    maxCombo = rand(9) + 1
     puts "Monster list"
     @waves_data['waves'].each_index do |index|
       puts "第 #{index + 1} 波"
@@ -153,7 +154,7 @@ class Floor
           @acs_data[:a] += 1
           wave_recover = team_hp - wave_hp
           wave_hp = team_hp
-          wave_combo = 6 + rand(9)
+          wave_combo = 6 + rand(maxCombo)
           wave_attack = team_attack * ((1 + rand(5)) + (wave_combo * 0.3))
           wave_attack *= (1 + rand(5))
           #puts "recover:#{wave_recover} hp:#{wave_hp} combo:#{wave_combo} attack:#{wave_attack}"
