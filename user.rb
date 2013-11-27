@@ -168,6 +168,7 @@ class User
     source = @monster.data[@cards[sourceCardId][:monsterId]]
     #puts "source:#{source.inspect}"
     @loots.each do |l|
+      next unless l['card']
       l['merged'] = true if sourceCardId == l['card']['cardId']
       next if l['merged']
       target = @monster.data[l['card']['monsterId']]
