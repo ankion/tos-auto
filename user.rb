@@ -106,7 +106,7 @@ class User
       if l['type'] == 'monster'
         puts "#{l['card']['cardId']} lv#{l['card']['level']} #{@monster.data[l['card']['monsterId']][:monsterName]}"
       else
-        puts "#{l['amount']} Gold"
+        l['merged'] = true
       end
     end
   end
