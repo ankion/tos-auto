@@ -3,12 +3,14 @@ require "addressable/uri"
 require "./checksum"
 require "./monster"
 require "./setting"
+require "./exp"
 
 class User
   attr_accessor :monster, :data, :cards, :post_data, :helpers, :loots, :bookmarks
 
   def initialize
     @monster = Monster.new
+    @exp = Exp.new
     @stage_require_floor = {
       '8' => 23, # 一封
       '9' => 28,
@@ -93,7 +95,8 @@ class User
     puts "uid：#{@data['uid']}"
     puts "名稱：#{@data['name']}"
     puts "等級：#{@data['level']}"
-    puts "經驗值：#{@data['exp']}"
+    next_exp = @exp.data[@data['level'].to_i + 1]
+    puts "經驗值：#{@data['exp']}/#{next_exp} (#{next_exp - @data['exp'].to_i})"
     puts "金錢：#{@data['coin']}"
     puts "靈魂石：#{@data['diamond']}"
     puts "體力：#{@data['currentStamina']}/#{@data['maxStamina']}"
