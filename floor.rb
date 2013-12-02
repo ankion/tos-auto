@@ -3,7 +3,7 @@ require "addressable/uri"
 require './checksum'
 
 class Floor
-  attr_accessor :zones, :stages, :floors, :wave_team, :wave_team_data, :wave_floor, :wave_helper, :waves_data, :wave_fail, :finish_data, :acs_data
+  attr_accessor :zones, :stages, :floors, :wave_team, :wave_team_data, :wave_floor, :wave_helper, :waves_data, :wave_fail, :finish_data, :acs_data, :stage_bonus, :bonus_type
 
   def initialize
     @zones = {
@@ -15,6 +15,16 @@ class Floor
       '6' => {:name => '以諾塔'},
       '7' => {:name => '古神遺跡', :requireFloor => 23},
       '8' => {:name => '旅人的記憶', :requireFloor => 88}
+    }
+    @bonus_type = {
+      0 => 'NONE',
+      1 => '體力消耗減 50%',
+      2 => '封印卡掉落率 200%',
+      3 => 'Exp 獲得量 200%',
+      4 => 'RARE_APPEAR',
+      5 => '碎片掉落 200%',
+      6 => 'REWARD',
+      7 => 'ALERT'
     }
     @one_time_floors = [222, 488]
     @one_time_stages = [63, 150, 132]
@@ -29,6 +39,7 @@ class Floor
     @finish_data = nil
     @acs_data = nil
     @max_round = 100
+    @stage_bonus = nil
   end
 
   def one_time_floor?

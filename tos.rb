@@ -44,6 +44,7 @@ class Tos
     @user.parse_card_data(res_json['cards'])
     @floor.parse_floor_data(res_json['data'])
     @user.monster.parse_data(res_json['data']['monsters'])
+    @floor.stage_bonus = res_json['data']['stageBonus']
     puts '======================================'
     @user.print_user_sc
     print 'Auto replay the same floor?(y/N)'
@@ -69,7 +70,7 @@ class Tos
       if z[:requireFloor]
         next unless (@user.data['completedFloorIds'].include? z[:requireFloor].to_i)
       end
-      puts "#{index} #{z[:name]}"
+      puts "#{index} #{z[:name]}#{(@floor.stage_bonus['zone'].to_i == index.to_i) ? ' (bonus)' : ''}"
     end
     print 'Choice zone?(b:back,q:quit)'
     print "[#{@last_zone}]" if @last_zone
@@ -92,6 +93,8 @@ class Tos
       print "#{s[:id]} #{s[:name]}"
       print "(completed)" if (@user.data['completedStageIds'].include? s[:id].to_i)
       print " #{Time.at(s[:start_at].to_i).strftime('%m/%d %H:%M')} ~ #{Time.at(s[:end_at].to_i).strftime('%m/%d %H:%M')}" unless s[:start_at] == ''
+      bonus = @floor.stage_bonus['stages'].select {|v| v['stageId'].to_i == s[:id].to_i }
+      print " (#{@floor.bonus_type[bonus.first['bonusType']]})" if bonus.length > 0
       print "\n"
       if choice_zone.to_i < 7
         last_stage = s[:id]
