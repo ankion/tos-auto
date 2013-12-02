@@ -170,17 +170,17 @@ class User
     targetCardIds = []
     source = @monster.data[@cards[sourceCardId][:monsterId]]
     #puts "source:#{source.inspect}"
-    @loots.each do |l|
-      next unless l['card']
-      l['merged'] = true if sourceCardId == l['card']['cardId']
-      next if l['merged']
-      target = @monster.data[l['card']['monsterId']]
+    @cards.each do |l|
+      l[1][:merged] = true if sourceCardId == l[1][:cardId]
+      next if l[1][:merged]
+      next if @bookmarks.include? l[1][:cardId]
+      target = @monster.data[l[1][:monsterId]]
       #puts "target:#{target.inspect}"
       next unless target_cards.include? target[:monsterId]
       #puts "source:#{source[:attribute]} target:#{target[:attribute]}"
       if source[:attribute] == target[:attribute]
-        targetCardIds << l['card']['cardId']
-        l['merged'] = true
+        l[1][:merged] = true
+        targetCardIds << l[1][:cardId]
         break if targetCardIds.length == 5
       end
     end
