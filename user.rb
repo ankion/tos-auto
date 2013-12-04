@@ -171,7 +171,7 @@ class User
     source = @monster.data[@cards[sourceCardId][:monsterId]]
     #puts "source:#{source.inspect}"
     @cards.each do |l|
-      l[1][:merged] = true if sourceCardId == l[1][:cardId]
+      next if sourceCardId == l[1][:cardId]
       next if l[1][:merged]
       next if @bookmarks.include? l[1][:cardId]
       target = @monster.data[l[1][:monsterId]]
@@ -192,7 +192,7 @@ class User
     source = @monster.data[@cards[sourceCardId][:monsterId]]
     #puts "source:#{source.inspect}"
     @cards.each do |l|
-      l[1][:merged] = true if sourceCardId == l[1][:cardId]
+      next if sourceCardId == l[1][:cardId]
       next if l[1][:merged]
       next if @bookmarks.include? l[1][:cardId]
       target = @monster.data[l[1][:monsterId]]
