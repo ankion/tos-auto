@@ -7,8 +7,15 @@ defaults: &defaults
   sysInfo: ""
   platform: ""
   auto_sell: false
-  target_cards: '56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115'
+  sell_cards: []
   auto_merge: false
-  source_cards: '86,87,88,89,90,91,92,93,94,95'
-  max_merge_lv: 10
-  master_cards: ''
+  merge_cards:
+    base_merge:
+      target_cards: [56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115]
+      source_cards: [86,87,88,89,90,91,92,93,94,95]
+      stop_at_lv_max: true
+      stop_at_cd_max: false
+      require_target_lv: 0
+      require_target_cd: 0
+      require_target_amount_min: 1
+      require_target_amount_max: 5
