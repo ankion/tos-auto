@@ -163,9 +163,13 @@ class User
       next if source.to_i != monster[:monsterId].to_i
       if merge_card['stop_at_lv_max']
         stop_at_lv_max = false if card[1][:level].to_i < monster[:maxLevel].to_i
+      else
+        stop_at_lv_max = false
       end
       if merge_card['stop_at_cd_max']
         stop_at_cd_max = false if card[1][:skillLevel].to_i < monster[:normalSkill][:maxLevel].to_i
+      else
+        stop_at_cd_max = false
       end
       if (stop_at_lv_max == merge_card['stop_at_lv_max'] and stop_at_cd_max == merge_card['stop_at_cd_max']) and (merge_card['stop_at_lv_max'] or merge_card['stop_at_cd_max'])
         card[1][:merged] = true
