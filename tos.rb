@@ -21,11 +21,11 @@ class Tos
     }
     @auto_repeat = false
     @auto_sell = Settings['auto_sell'] || false
-    @target_cards = Settings['target_cards'].split(',') || []
+    #@target_cards = Settings['target_cards'].split(',') || []
     @auto_merge = Settings['auto_merge'] || false
-    @max_merge_lv = Settings['max_merge_lv'] || 99
-    @source_cards = Settings['source_cards'].split(',') || []
-    @master_cards = Settings['master_cards'].split(',') || []
+    #@max_merge_lv = Settings['max_merge_lv'] || 99
+    #@source_cards = Settings['source_cards'].split(',') || []
+    #@master_cards = Settings['master_cards'].split(',') || []
     @last_zone = nil
   end
 
@@ -43,6 +43,7 @@ class Tos
     @user.bookmarks = res_json['user']['bookmarks']
     @user.parse_card_data(res_json['cards'])
     @floor.parse_floor_data(res_json['data'])
+    @user.monster.parse_normal_skill(res_json['data']['normalSkills'])
     @user.monster.parse_data(res_json['data']['monsters'])
     @floor.stage_bonus = res_json['data']['stageBonus']
     puts '======================================'

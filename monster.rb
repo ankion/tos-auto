@@ -454,6 +454,21 @@ class Monster
       '447' => {:monsterName => "奧秘魚術士"},
       '448' => {:monsterName => "符靈典範 ‧ 綠茵國王"}
     }
+    @normal_skill = nil
+  end
+
+  def parse_normal_skill(data)
+    @normal_skill = []
+    data.each do |d|
+      skill_data = d.split('|')
+      skill = {
+        :skillId => skill_data[0],
+        :minCoolDown => skill_data[1],
+        :maxCoolDown => skill_data[2],
+        :maxLevel => skill_data[3]
+      }
+      @normal_skill << skill
+    end
   end
 
   def parse_data(data)
@@ -473,7 +488,7 @@ class Monster
       @data[monster[0]][:expType] = monster[11]
       @data[monster[0]][:attackDuration] = monster[12]
       @data[monster[0]][:leaderSkill] = monster[13]
-      @data[monster[0]][:normalSkill] = monster[14]
+      @data[monster[0]][:normalSkill] = @normal_skill[monster[14].to_i]
       @data[monster[0]][:baseMergeExp] = monster[15]
       @data[monster[0]][:incMergeExp] = monster[16]
       @data[monster[0]][:baseSellCoin] = monster[17]
