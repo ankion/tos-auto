@@ -9,7 +9,7 @@ class Checksum
 
   def getHash(input, salt = '')
     str = "#{key}#{salt}"
-    str2 = Digest::MD5.hexdigest(input)[4..7]
+    str2 = Digest::MD5.hexdigest(input)[8..11]
     return Digest::MD5.hexdigest("#{str2}#{str}")
   end
 

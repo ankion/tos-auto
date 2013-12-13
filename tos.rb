@@ -137,7 +137,7 @@ class Tos
     #res = Net::HTTP.get_response(uri)
     res_json = JSON.parse(page.body)
     return get_error(res_json) if res_json['respond'].to_i != 1
-    helpers = res_json['data']['helperList']
+    helpers = res_json['data']['alluserList']
     #puts helpers.inspect
     @user.parse_helpers_data(helpers)
     @user.print_helpers
