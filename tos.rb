@@ -93,7 +93,7 @@ class Tos
       print "(completed)" if (@user.data['completedStageIds'].include? s[:id].to_i)
       print " #{Time.at(s[:start_at].to_i).strftime('%m/%d %H:%M')} ~ #{Time.at(s[:end_at].to_i).strftime('%m/%d %H:%M')}" unless s[:start_at] == ''
       bonus = @floor.stage_bonus['stages'].select {|v| v['stageId'].to_i == s[:id].to_i }
-      print " (#{@floor.bonus_type[bonus.first['bonusType']]})" if bonus.length > 0
+      print " (#{@floor.bonus_type[bonus.first['bonusType'].to_i]})" if bonus.length > 0
       print "\n"
       if choice_zone.to_i < 7
         last_stage = s[:id]
