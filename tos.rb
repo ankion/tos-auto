@@ -164,6 +164,19 @@ class Tos
     @logger.info page.body
     #puts page.body
     res_json = JSON.parse(page.body)
+    if @auto_repeat and res_json['respond'].to_i == 3
+      puts res_json['errorMessage']
+      wait_secs = 60 * 10
+      puts "Auto play again start at #{wait_secs} sec."
+      print "[                                        ]\r["
+      40.times do
+        sleep (wait_secs/40)
+        print '#'
+      end
+      print "\n"
+
+      return false
+    end
     return get_error(res_json) if res_json['respond'].to_i != 1
     @floor.waves_data = res_json['data']
 
