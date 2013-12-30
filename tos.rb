@@ -184,7 +184,7 @@ class Tos
     #puts finish_data.inspect
     #puts acs_data.inspect
     @floor.acs_data[:e] = 10.0 if @floor.wave_fail and not @floor.one_time_floor?
-    puts "waiting complete.(#{@floor.acs_data[:e]})"
+    puts "waiting complete.(#{@floor.acs_data[:e]})[#{Time.now.strftime("%I:%M:%S%p")} - #{(Time.now + @floor.acs_data[:e]).strftime("%I:%M:%S%p")}]"
     print "[                                        ]\r["
     40.times do
       sleep (@floor.acs_data[:e]/40)
