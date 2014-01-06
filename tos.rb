@@ -10,8 +10,9 @@ require './setting'
 
 class Tos
   def initialize
-    File.delete('logfile.log') if File.exists? 'logfile.log'
-    @logger = Logger.new('logfile.log')
+    file_name = "logfile.log.#{ARGV[0] ? ARGV[0] : 'defaults'}"
+    File.delete(file_name) if File.exists? file_name
+    @logger = Logger.new(file_name)
     @tos_url = Settings['tos_url']
     @user = User.new
     #@monster = Monster.new
@@ -47,7 +48,7 @@ class Tos
     puts '======================================'
     @user.print_user_sc
     print 'Auto replay the same floor?(y/N)'
-    choice_auto_repeat = gets.chomp
+    choice_auto_repeat = $stdin.gets.chomp
     exit if choice_auto_repeat == 'q'
     @auto_repeat = true if choice_auto_repeat == 'y'
     #puts @user.cards['10'].inspect
@@ -56,7 +57,7 @@ class Tos
     auto_team = @user.auto_get_team
     print 'Choice team?'
     print "[#{auto_team}]" if auto_team
-    choice_team = gets.chomp
+    choice_team =  $stdin.gets.chomp
     exit if choice_team == 'q'
     choice_team = auto_team if auto_team and choice_team == ''
     @floor.wave_team = choice_team.to_i - 1
@@ -73,7 +74,7 @@ class Tos
     end
     print 'Choice zone?(b:back,q:quit)'
     print "[#{@last_zone}]" if @last_zone
-    choice_zone = gets.chomp
+    choice_zone = $stdin.gets.chomp
     exit if choice_zone == 'q'
     return false if choice_zone == 'b'
     choice_zone = @last_zone if @last_zone and choice_zone == ''
@@ -102,7 +103,7 @@ class Tos
     end
     print 'Choice stage?(b:back,q:quit)'
     print "[#{last_stage}]" if last_stage
-    choice_stage = gets.chomp
+    choice_stage = $stdin.gets.chomp
     exit if choice_stage == 'q'
     return false if choice_stage == 'b'
     choice_stage = last_stage if last_stage and choice_stage == ''
@@ -117,7 +118,7 @@ class Tos
     end
     print 'Choice floor?(b:back,q:quit)'
     print "[#{last_floor}]" if last_floor
-    choice_floor = gets.chomp
+    choice_floor =  $stdin.gets.chomp
     exit if choice_floor == 'q'
     return false if choice_floor == 'b'
     choice_floor = last_floor if last_floor and choice_floor == ''
@@ -149,7 +150,7 @@ class Tos
     end
     print 'Choice helper?(b:back,q:quit)'
     print "[auto]"
-    choice_helper = gets.chomp
+    choice_helper =  $stdin.gets.chomp
     exit if choice_helper == 'q'
     return true if choice_helper == 'b'
     choice_helper = (1 + rand(3)).to_s if choice_helper == ''
@@ -244,7 +245,7 @@ class Tos
       return false
     end
     print 'Play again?(y/N)'
-    return false if gets.chomp == 'y'
+    return false if  $stdin.gets.chomp == 'y'
     return true
   end
 
