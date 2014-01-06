@@ -10,8 +10,9 @@ require './setting'
 
 class Tos
   def initialize
-    File.delete('logfile.log') if File.exists? 'logfile.log'
-    @logger = Logger.new('logfile.log')
+    file_name = "logfile.log.#{ARGV[0] ? ARGV[0] : 'defaults'}"
+    File.delete(file_name) if File.exists? file_name
+    @logger = Logger.new(file_name)
     @tos_url = Settings['tos_url']
     @user = User.new
     #@monster = Monster.new
