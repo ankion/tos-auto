@@ -14,10 +14,11 @@ def general_devicekey
   Digest::MD5.hexdigest(seed_string)
 end
 
-count = 10
+count = 48 * 1
 @monster = Monster.new
 @logger = Logger.new("accountlist.log")
-count.times do
+count.times do |index|
+  puts "#(#{index + 1}/#{count})"
   encypt = Checksum.new
   deviceKey = general_devicekey
   uniqueKey = general_uniquekey(deviceKey)
