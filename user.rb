@@ -73,12 +73,22 @@ class User
     @helpers = {}
     data.each_index do |index|
       person = data[index].split('|')
+      club = ""
+      begin
+        club = person[17].split('#',7)[6]
+      rescue 
+      end
+      
       person_data = {
         :uid => person[0],
         :name => person[1],
+        :loginTime => person[2],
         :level => person[3],
         :monsterId => person[8],
         :monsterLevel => person[10],
+        :skillLevel => person[11],
+        :coolDown => "#{Integer(@monster.data[person[8]][:normalSkill][:maxCoolDown]) - Integer(person[11]) + 1}",
+        :club => club ,
         :monster_name => @monster.data[person[8]][:monsterName],
         :clientHelperCard => "#{person[7..11].join('|')}|0|0"
       }
@@ -339,7 +349,8 @@ class User
 
   def print_helpers
     @helpers.each do |index, h|
-      puts "[#{index}] #{h[:uid]} #{h[:name]} #{h[:level]} #{h[:monster_name]}"
+      #puts "[#{index}] #{h[:uid]} #{h[:name]} #{h[:level]} #{h[:monster_name]}"
+      puts "[#{index}] 【#{h[:club]}】#{h[:name]}:#{h[:monster_name]} LV:#{h[:monsterLevel]} CD:#{h[:coolDown]}"
     end
   end
 

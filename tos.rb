@@ -139,6 +139,7 @@ class Tos
     res_json = JSON.parse(page.body)
     return get_error(res_json) if res_json['respond'].to_i != 1
     helpers = res_json['data']['alluserList']
+    #puts res_json['data']
     #puts helpers.inspect
     @user.parse_helpers_data(helpers)
     @user.print_helpers
