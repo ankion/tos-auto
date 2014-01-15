@@ -1,5 +1,6 @@
 # -*- encoding : utf-8 -*-
 require "addressable/uri"
+require "./api"
 require "./checksum"
 require "./monster"
 require "./setting"
@@ -108,16 +109,16 @@ class User
     next_exp = @exp.data[@data['level'].to_i + 1]
     puts "經驗值：#{@data['exp']}/#{next_exp} (#{next_exp - @data['exp'].to_i})"
     puts "金錢：#{@data['coin']}"
-    puts "靈魂石：#{@data['diamond']}"
+    puts "魔石：#{@data['diamond']}"
     puts "體力：#{@data['currentStamina']}/#{@data['maxStamina']}"
     puts "背包：#{@data['totalCards']}/#{@data['inventoryCapacity']}"
   end
 
   def print_loots
-    puts '戰勵品：'
+    puts "戰勵品：".bg_blue.yellow.bold
     @loots.each do |l|
       if l['type'] == 'monster'
-        puts "#{l['card']['cardId']} lv#{l['card']['level']} #{@monster.data[l['card']['monsterId']][:monsterName]}"
+        puts "%3d lv%2d %s" % [l['card']['cardId'],l['card']['level'],@monster.data[l['card']['monsterId']][:monsterName]]
       else
         l['merged'] = true
       end
@@ -286,8 +287,7 @@ class User
         next unless card
         monster = @monster.data[card[:monsterId]]
         print "\t"
-        print "lv#{card[:level]} "
-        print "#{monster[:monsterName]}"
+        print "lv%2d %s" % [card[:level],monster[:monsterName]]
         print "\n"
         #puts @monster.data[card[:monsterId]].inspect
       end
@@ -350,7 +350,7 @@ class User
   def print_helpers
     @helpers.each do |index, h|
       #puts "[#{index}] #{h[:uid]} #{h[:name]} #{h[:level]} #{h[:monster_name]}"
-      puts "[#{index}] 【#{h[:club]}】#{h[:name]}:#{h[:monster_name]} LV:#{h[:monsterLevel]} CD:#{h[:coolDown]}"
+      puts "[%3d] LV:%2d CD:%2d %s : %s %s" % [index,h[:monsterLevel],h[:coolDown],h[:monster_name],"【#{h[:club]}】".yellow,h[:name]]
     end
   end
 

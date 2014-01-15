@@ -1,17 +1,9 @@
+require "./api"
 require './checksum'
 require "./monster"
 require 'json'
 require 'logger'
 require 'mechanize'
-## Set Time Zone #######################################
-tz_name = 'Asia/Taipei'
-prev_tz = ENV['TZ']
-begin
-  ENV['TZ'] = tz_name
-rescue
-  ENV['TZ'] = prev_tz
-end
-#########################################
 def general_uniquekey(deviceKey)
   seed_string = "#{deviceKey}#{Time.now.to_i}#{rand(999999999)}"
   Digest::MD5.hexdigest(seed_string)
@@ -22,51 +14,35 @@ def general_devicekey
   Digest::MD5.hexdigest(seed_string)
 end
 #########################################
-def print_wait(times)
-  chars = %w{ | / - \\ }
-  (times*10).times do
-    print chars[0]
-    sleep 0.1
-    print "\b"
-    chars.push chars.shift
-  end
-end
-#########################################
-def puts_wait(times)
-  print_wait(times)
-  print " \n"
-end
-#########################################
-=begin
-def spinner(code)
-  chars = %w{ | / - \\ }
-  t = Thread.new { code.call }
-  while t.alive?
-    print chars[0]
-    sleep 0.1
-    print "\b"
-    chars.push chars.shift
-  end
-  t.join
-end
-=end
-#########################################
 def send_tos(web,encypt,url)
   res_json = nil
   begin
     page = web.get("http://zh.towerofsaviors.com#{url}&hash=#{encypt.getHash(url, '')}")
     res_json = JSON.parse(page.body)
-    if res_json['respond'].to_i != 1
+    respond = res_json['respond'].to_i
+    if respond != 1
       print '\n'
-      if res_json['respond'].to_i == 6
+      if respond == 6
+        # 6=error
         puts res_json.inspect
-        print 'retry > '
-        print_wait(60)
+        def_wait = 60
+        wait = 0
+        begin
+          wait=Integer(res_json['wait'])
+        rescue
+          wait=60
+        end
+        wait = def_wait if wait == 0
+        print "retry after #{wait} secs > "
+        print_wait(wait)
       else
         puts res_json.inspect
         exit
       end
     end
+  rescue
+    puts res_json.inspect
+    exit
   end while res_json != nil && res_json['respond'].to_i == 6
   return res_json
 end
@@ -176,11 +152,15 @@ count.times do
   puts "deviceKey:#{deviceKey}"
   puts "uniqueKey:#{uniqueKey}"
   puts "uid:#{uid}"
-  first_card = @monster.data[monster['monsterId']]
-  puts "<#{monster['level']}> #{monster['monsterId']} #{first_card[:monsterName]}"
-  hehagame = "http://tos.hehagame.com/Category_show.php?ide=%03d" %monster['monsterId']
+  mId = monster['monsterId']
+  first_card = @monster.data[mId]
+  mIdFmt = "%03d" %mId
+  mName = first_card[:monsterName]
+  puts "<#{monster['level']}> #{mIdFmt} #{mName}"
+  hehagame = "http://tos.hehagame.com/Category_show.php?ide=#{mIdFmt}"
   puts hehagame
 ###############################################
-  @logger.info "#{monster['monsterId']}|#{first_card[:monsterName]}|#{monster['level']}|#{uid}|#{uniqueKey}|#{deviceKey}|#{hehagame}"
-  puts_wait(1)
+  @logger.info "#{mIdFmt}|#{mName}|#{uid}|#{uniqueKey}|#{deviceKey}"
+  print 'wait to next : '
+  puts_wait(3)
 end

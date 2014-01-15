@@ -1,10 +1,12 @@
 # -*- encoding : utf-8 -*-
+require './api'
+
 class Monster
   attr_accessor :data
 
   def initialize
     @data = {
-      '0' => {:monsterName => ""},
+      '0' => {:monsterName => "０"},
       '1' => {:monsterName => "莫莉"},
       '2' => {:monsterName => "高級水術士莫莉"},
       '3' => {:monsterName => "水魔法師莫莉"},
@@ -151,19 +153,19 @@ class Monster
       '144' => {:monsterName => "暗夜刺客"},
       '145' => {:monsterName => "暗影劍豪"},
       '146' => {:monsterName => "冰耀巨像"},
-      '147' => {:monsterName => "冰耀巨像 ‧ 解放"},
+      '147' => {:monsterName => "冰耀巨像‧解放"},
       '148' => {:monsterName => "冰耀巨鱷"},
       '149' => {:monsterName => "烙紅巨像"},
-      '150' => {:monsterName => "烙紅巨像 ‧ 解放"},
+      '150' => {:monsterName => "烙紅巨像‧解放"},
       '151' => {:monsterName => "烙紅龍蜥"},
       '152' => {:monsterName => "碧青巨像"},
-      '153' => {:monsterName => "碧青巨像 ‧ 解放"},
+      '153' => {:monsterName => "碧青巨像‧解放"},
       '154' => {:monsterName => "碧青行者"},
       '155' => {:monsterName => "聖靈巨像"},
-      '156' => {:monsterName => "聖靈巨像 ‧ 解放"},
+      '156' => {:monsterName => "聖靈巨像‧解放"},
       '157' => {:monsterName => "聖靈怒獅"},
       '158' => {:monsterName => "暗月巨像"},
-      '159' => {:monsterName => "暗月巨像 ‧ 解放"},
+      '159' => {:monsterName => "暗月巨像‧解放"},
       '160' => {:monsterName => "暗月夜龍"},
       '161' => {:monsterName => "機械鯨鯊"},
       '162' => {:monsterName => "強化機械鯨鯊"},
@@ -220,31 +222,31 @@ class Monster
       '213' => {:monsterName => "賽特"},
       '214' => {:monsterName => "戰爭之神賽特"},
       '215' => {:monsterName => "舒"},
-      '216' => {:monsterName => "天空之神 ‧ 舒"},
+      '216' => {:monsterName => "天空之神‧舒"},
       '217' => {:monsterName => "拉"},
       '218' => {:monsterName => "太陽之子拉"},
       '219' => {:monsterName => "奧西利斯"},
       '220' => {:monsterName => "不死冥王奧西利斯"},
       '221' => {:monsterName => "海龍"},
-      '222' => {:monsterName => "東海龍王 ‧ 敖廣"},
+      '222' => {:monsterName => "東海龍王‧敖廣"},
       '223' => {:monsterName => "蓮藕仔"},
-      '224' => {:monsterName => "三太子 ‧ 哪吒"},
+      '224' => {:monsterName => "三太子‧哪吒"},
       '225' => {:monsterName => "大力王"},
-      '226' => {:monsterName => "平天大聖 ‧ 牛魔王"},
+      '226' => {:monsterName => "平天大聖‧牛魔王"},
       '227' => {:monsterName => "美猴王"},
-      '228' => {:monsterName => "齊天大聖 ‧ 孫悟空"},
+      '228' => {:monsterName => "齊天大聖‧孫悟空"},
       '229' => {:monsterName => "妖狐"},
-      '230' => {:monsterName => "白臉金毛 ‧ 妲己"},
+      '230' => {:monsterName => "白臉金毛‧妲己"},
       '231' => {:monsterName => "機械水龍"},
-      '232' => {:monsterName => "機械水神龍 ‧ 內拉羅斯"},
+      '232' => {:monsterName => "機械水神龍‧內拉羅斯"},
       '233' => {:monsterName => "機械火龍"},
-      '234' => {:monsterName => "機械火神龍 ‧ 伊索爾德"},
+      '234' => {:monsterName => "機械火神龍‧伊索爾德"},
       '235' => {:monsterName => "機械地龍"},
-      '236' => {:monsterName => "機械地神龍 ‧ 卡斯迪"},
+      '236' => {:monsterName => "機械地神龍‧卡斯迪"},
       '237' => {:monsterName => "機械聖龍"},
-      '238' => {:monsterName => "機械聖皇龍 ‧ 泰瑞那斯"},
+      '238' => {:monsterName => "機械聖皇龍‧泰瑞那斯"},
       '239' => {:monsterName => "機械闇龍"},
-      '240' => {:monsterName => "機械冥王龍 ‧ 萊瑞姆"},
+      '240' => {:monsterName => "機械冥王龍‧萊瑞姆"},
       '241' => {:monsterName => "破碎之蒼魂"},
       '242' => {:monsterName => "破碎之赤魂"},
       '243' => {:monsterName => "破碎之青魂"},
@@ -289,40 +291,40 @@ class Monster
       '282' => {:monsterName => "大地千年靈魂石"},
       '283' => {:monsterName => "神聖千年靈魂石"},
       '284' => {:monsterName => "鬼魅千年靈魂石"},
-      '285' => {:monsterName => "元素操縱者 ‧ 迪亞布羅"},
-      '286' => {:monsterName => "萬魔之王 ‧ 薩魯曼"},
-      '287' => {:monsterName => "碑紋騎士 ‧ 奧丁"},
-      '288' => {:monsterName => "雙體共生 ‧ 噬日狼"},
-      '289' => {:monsterName => "雙體共生 ‧ ?月狼"},
-      '290' => {:monsterName => "雖死猶在 ‧ 毒龍尼德霍格"},
+      '285' => {:monsterName => "元素操縱者‧迪亞布羅"},
+      '286' => {:monsterName => "萬魔之王‧薩魯曼"},
+      '287' => {:monsterName => "碑紋騎士‧奧丁"},
+      '288' => {:monsterName => "雙體共生‧噬日狼"},
+      '289' => {:monsterName => "雙體共生‧喰月狼"},
+      '290' => {:monsterName => "雖死猶在‧毒龍尼德霍格"},
       '291' => {:monsterName => "鬼魅萬年靈魂石"},
       '292' => {:monsterName => "人面怪鳥"},
-      '293' => {:monsterName => "米迦勒 ‧ 路西法"},
+      '293' => {:monsterName => "米迦勒‧路西法"},
       '294' => {:monsterName => "通透的蛋"},
       '295' => {:monsterName => "海拉"},
-      '296' => {:monsterName => "幻夢魚仙 ‧ 伊德海拉"},
+      '296' => {:monsterName => "幻夢魚仙‧伊德海拉"},
       '297' => {:monsterName => "火紅的蛋"},
       '298' => {:monsterName => "梅格"},
-      '299' => {:monsterName => "龍裔 ‧ 梅格蘭斯"},
+      '299' => {:monsterName => "龍裔‧梅格蘭斯"},
       '300' => {:monsterName => "翠綠的蛋"},
       '301' => {:monsterName => "伊薇特"},
       '302' => {:monsterName => "蝶妖伊薇特"},
       '303' => {:monsterName => "閃亮的蛋"},
       '304' => {:monsterName => "瑪格"},
-      '305' => {:monsterName => "聖蜂后 ‧ 瑪格莉特"},
+      '305' => {:monsterName => "聖蜂后‧瑪格莉特"},
       '306' => {:monsterName => "暗啞的蛋"},
       '307' => {:monsterName => "伊莎貝爾"},
       '308' => {:monsterName => "黑寡婦伊莎貝爾"},
       '309' => {:monsterName => "水之異界龍"},
-      '310' => {:monsterName => "深潛者之父 ‧ 達貢"},
+      '310' => {:monsterName => "深潛者之父‧達貢"},
       '311' => {:monsterName => "火之異界龍"},
-      '312' => {:monsterName => "火焰共生者 ‧ 克圖格亞"},
+      '312' => {:monsterName => "火焰共生者‧克圖格亞"},
       '313' => {:monsterName => "風之異界龍"},
-      '314' => {:monsterName => "不朽尖吼者 ‧ 拜亞基"},
+      '314' => {:monsterName => "不朽尖吼者‧拜亞基"},
       '315' => {:monsterName => "光之異界龍"},
-      '316' => {:monsterName => "招蕩的輝芒 ‧ 圖爾茲查"},
+      '316' => {:monsterName => "招蕩的輝芒‧圖爾茲查"},
       '317' => {:monsterName => "暗之異界龍"},
-      '318' => {:monsterName => "群山中之恐怖 ‧ 法格恩"},
+      '318' => {:monsterName => "群山中之恐怖‧法格恩"},
       '319' => {:monsterName => "破損的海神守護石像"},
       '320' => {:monsterName => "海神守護石像"},
       '321' => {:monsterName => "破損的火神守護石像"},
@@ -349,64 +351,64 @@ class Monster
       '342' => {:monsterName => "聖光蜥蝪騎士"},
       '343' => {:monsterName => "黑雷蜥蝪騎士"},
       '344' => {:monsterName => "特洛伊公主"},
-      '345' => {:monsterName => "受詛咒的先知 ‧ 卡珊德拉"},
+      '345' => {:monsterName => "受詛咒的先知‧卡珊德拉"},
       '346' => {:monsterName => "科耳喀斯皇女"},
-      '347' => {:monsterName => "愛與恨的魔女 ‧ 美狄亞"},
+      '347' => {:monsterName => "愛與恨的魔女‧美狄亞"},
       '348' => {:monsterName => "薩爾瑪提亞女皇"},
-      '349' => {:monsterName => "黑魔法女巫 ‧ 喀耳刻"},
-      '350' => {:monsterName => "寒霧劍塚 ‧ 卡戎"},
-      '351' => {:monsterName => "機關傀儡 ‧ 紅月"},
-      '352' => {:monsterName => "腐林魔女 ‧ 布萊爾"},
-      '353' => {:monsterName => "鐵處女像 ‧ 浮士德"},
-      '354' => {:monsterName => "貓公爵 ‧ 費利克斯"},
-      '355' => {:monsterName => "持劍侍女 ‧ 波比"},
-      '356' => {:monsterName => "白羊宮 ‧ 波比"},
-      '357' => {:monsterName => "攻城者 ‧ 阿姆士唐"},
-      '358' => {:monsterName => "金牛宮 ‧ 阿姆士唐"},
-      '359' => {:monsterName => "雙劍士 ‧ 波魯克斯"},
-      '360' => {:monsterName => "雙子宮 ‧ 加斯陀與波魯克斯"},
-      '361' => {:monsterName => "暗影刺客 ‧ 約翰"},
-      '362' => {:monsterName => "巨蟹宮 ‧ 約翰"},
-      '363' => {:monsterName => "重劍士 ‧ 加里昂"},
-      '364' => {:monsterName => "獅子宮 ‧ 加里昂"},
-      '365' => {:monsterName => "割穗少女 ‧ 普西芬妮"},
-      '366' => {:monsterName => "處女宮 ‧ 普西芬妮"},
-      '367' => {:monsterName => "聖殿武士 ‧ 露娜"},
-      '368' => {:monsterName => "天秤宮 ‧ 露娜"},
-      '369' => {:monsterName => "重鐮刺客 ‧ 艾瑪"},
-      '370' => {:monsterName => "天蠍宮 ‧ 艾瑪"},
-      '371' => {:monsterName => "綠林行者 ‧ 赫茲"},
-      '372' => {:monsterName => "人馬宮 ‧ 赫茲"},
-      '373' => {:monsterName => "碎岩武者 ‧ 杜門"},
-      '374' => {:monsterName => "山羊宮 ‧ 杜門"},
-      '375' => {:monsterName => "鬼魅舞者 ‧ 凱莉"},
-      '376' => {:monsterName => "水瓶宮 ‧ 凱莉"},
-      '377' => {:monsterName => "海浪騎士 ‧ 卡秋婭與拉?妮斯"},
-      '378' => {:monsterName => "雙魚宮 ‧ 卡秋婭與拉?妮斯"},
-      '379' => {:monsterName => "黃道星靈 ‧ 水"},
-      '380' => {:monsterName => "黃道星靈 ‧ 火"},
-      '381' => {:monsterName => "黃道星靈 ‧ 木"},
-      '382' => {:monsterName => "黃道星靈 ‧ 光"},
-      '383' => {:monsterName => "黃道星靈 ‧ 暗"},
+      '349' => {:monsterName => "黑魔法女巫‧喀耳刻"},
+      '350' => {:monsterName => "寒霧劍塚‧卡戎"},
+      '351' => {:monsterName => "機關傀儡‧紅月"},
+      '352' => {:monsterName => "腐林魔女‧布萊爾"},
+      '353' => {:monsterName => "鐵處女像‧浮士德"},
+      '354' => {:monsterName => "貓公爵‧費利克斯"},
+      '355' => {:monsterName => "持劍侍女‧波比"},
+      '356' => {:monsterName => "白羊宮‧波比"},
+      '357' => {:monsterName => "攻城者‧阿姆士唐"},
+      '358' => {:monsterName => "金牛宮‧阿姆士唐"},
+      '359' => {:monsterName => "雙劍士‧波魯克斯"},
+      '360' => {:monsterName => "雙子宮‧加斯陀與波魯克斯"},
+      '361' => {:monsterName => "暗影刺客‧約翰"},
+      '362' => {:monsterName => "巨蟹宮‧約翰"},
+      '363' => {:monsterName => "重劍士‧加里昂"},
+      '364' => {:monsterName => "獅子宮‧加里昂"},
+      '365' => {:monsterName => "割穗少女‧普西芬妮"},
+      '366' => {:monsterName => "處女宮‧普西芬妮"},
+      '367' => {:monsterName => "聖殿武士‧露娜"},
+      '368' => {:monsterName => "天秤宮‧露娜"},
+      '369' => {:monsterName => "重鐮刺客‧艾瑪"},
+      '370' => {:monsterName => "天蠍宮‧艾瑪"},
+      '371' => {:monsterName => "綠林行者‧赫茲"},
+      '372' => {:monsterName => "人馬宮‧赫茲"},
+      '373' => {:monsterName => "碎岩武者‧杜門"},
+      '374' => {:monsterName => "山羊宮‧杜門"},
+      '375' => {:monsterName => "鬼魅舞者‧凱莉"},
+      '376' => {:monsterName => "水瓶宮‧凱莉"},
+      '377' => {:monsterName => "海浪騎士‧卡秋婭與拉維妮斯"},
+      '378' => {:monsterName => "雙魚宮‧卡秋婭與拉維妮斯"},
+      '379' => {:monsterName => "黃道星靈‧水"},
+      '380' => {:monsterName => "黃道星靈‧火"},
+      '381' => {:monsterName => "黃道星靈‧木"},
+      '382' => {:monsterName => "黃道星靈‧光"},
+      '383' => {:monsterName => "黃道星靈‧暗"},
       '384' => {:monsterName => "占星者"},
       '385' => {:monsterName => "見習小丑"},
       '386' => {:monsterName => "無頭小丑"},
       '387' => {:monsterName => "午夜之丑角"},
       '388' => {:monsterName => "不懼的鬼戰士"},
-      '389' => {:monsterName => "屠龍者 ‧ 貝奧武夫"},
+      '389' => {:monsterName => "屠龍者‧貝奧武夫"},
       '390' => {:monsterName => "不仁的鬼鬥士"},
-      '391' => {:monsterName => "戰神 ‧ 阿基里斯"},
+      '391' => {:monsterName => "戰神‧阿基里斯"},
       '392' => {:monsterName => "不幸的鬼騎士"},
-      '393' => {:monsterName => "薔薇雙槍 ‧ 迪爾姆德"},
+      '393' => {:monsterName => "薔薇雙槍‧迪爾姆德"},
       '394' => {:monsterName => "不惑的鬼武士"},
-      '395' => {:monsterName => "遮那王 ‧ 源義經"},
+      '395' => {:monsterName => "遮那王‧源義經"},
       '396' => {:monsterName => "不義的鬼將士"},
-      '397' => {:monsterName => "鬼神 ‧ 呂布"},
+      '397' => {:monsterName => "鬼神‧呂布"},
       '398' => {:monsterName => "光輝萬年靈魂石"},
       '399' => {:monsterName => "暴食史萊姆王"},
       '400' => {:monsterName => "瘋頭"},
-      '401' => {:monsterName => "聖言歌姬 ‧ 妍"},
-      '402' => {:monsterName => "夜言歌姬 ‧ 希"},
+      '401' => {:monsterName => "聖言歌姬‧妍"},
+      '402' => {:monsterName => "夜言歌姬‧希"},
       '403' => {:monsterName => "波拉"},
       '404' => {:monsterName => "奇美拉"},
       '405' => {:monsterName => "潘"},
@@ -418,15 +420,15 @@ class Monster
       '411' => {:monsterName => "公爵奈寶尼"},
       '412' => {:monsterName => "死靈魔導安多"},
       '413' => {:monsterName => "蒼龍魂使"},
-      '414' => {:monsterName => "龍儀姬 ‧ 烏蘇拉"},
+      '414' => {:monsterName => "龍儀姬‧烏蘇拉"},
       '415' => {:monsterName => "赤龍魂使"},
-      '416' => {:monsterName => "龍儀姬 ‧ 愛格德"},
+      '416' => {:monsterName => "龍儀姬‧愛格德"},
       '417' => {:monsterName => "青龍魂使"},
-      '418' => {:monsterName => "龍儀姬 ‧ 芭芭拉"},
+      '418' => {:monsterName => "龍儀姬‧芭芭拉"},
       '419' => {:monsterName => "光龍魂使"},
-      '420' => {:monsterName => "龍脈者 ‧ 安納"},
+      '420' => {:monsterName => "龍脈者‧安納"},
       '421' => {:monsterName => "暗龍魂使"},
-      '422' => {:monsterName => "龍脈者 ‧ 諾瓦利斯"},
+      '422' => {:monsterName => "龍脈者‧諾瓦利斯"},
       '423' => {:monsterName => "異域法眼"},
       '424' => {:monsterName => "機關騎士"},
       '425' => {:monsterName => "永劫碑文像"},
@@ -434,14 +436,14 @@ class Monster
       '427' => {:monsterName => "大耳兔"},
       '428' => {:monsterName => "冒險兔"},
       '429' => {:monsterName => "追憶旅人"},
-      '430' => {:monsterName => ""},
+      '430' => {:monsterName => "４３０"},
       '431' => {:monsterName => "貪婪精靈女王"},
       '432' => {:monsterName => "奪寶海盜"},
-      '433' => {:monsterName => "冰晶領航者 ‧ 奪寶海盜"},
+      '433' => {:monsterName => "冰晶領航者‧奪寶海盜"},
       '434' => {:monsterName => "紅纓武者"},
-      '435' => {:monsterName => "火靈之舞 ‧ 紅纓武者"},
+      '435' => {:monsterName => "火靈之舞‧紅纓武者"},
       '436' => {:monsterName => "捕風酋長"},
-      '437' => {:monsterName => "翡翠獵手 ‧ 捕風酋長"},
+      '437' => {:monsterName => "翡翠獵手‧捕風酋長"},
       '438' => {:monsterName => "清泉守衛"},
       '439' => {:monsterName => "炎鎧戰士"},
       '440' => {:monsterName => "雁目射手"},
@@ -452,9 +454,9 @@ class Monster
       '445' => {:monsterName => "修道雛鴨"},
       '446' => {:monsterName => "賜福蜜蜂"},
       '447' => {:monsterName => "奧秘魚術士"},
-      '448' => {:monsterName => "符靈典範 ‧ 綠茵國王"},
+      '448' => {:monsterName => "符靈典範‧綠茵國王"},
       '449' => {:monsterName => "狂怒蜥蜴暴君"},
-      '450' => {:monsterName => "法則女神 ‧ 姬氏"},
+      '450' => {:monsterName => "法則女神‧姬氏"},
       '451' => {:monsterName => "地精絞殺者"},
       '452' => {:monsterName => "地精斬首者"},
       '453' => {:monsterName => "地精扼喉者"},
@@ -471,19 +473,19 @@ class Monster
       '464' => {:monsterName => "聖裁勇者"},
       '465' => {:monsterName => "暗影刺客"},
       '466' => {:monsterName => "貴族伊莉莎白"},
-      '467' => {:monsterName => "血浴美人 ‧ 伊莉莎白"},
+      '467' => {:monsterName => "血浴美人‧伊莉莎白"},
       '468' => {:monsterName => "信差潔琪"},
-      '469' => {:monsterName => "彈簧腿 ‧ 潔琪"},
+      '469' => {:monsterName => "彈簧腿‧潔琪"},
       '470' => {:monsterName => "婚約者貝莉"},
-      '471' => {:monsterName => "罌花新娘 ‧ 貝莉"},
+      '471' => {:monsterName => "罌花新娘‧貝莉"},
       '472' => {:monsterName => "紳士傑克"},
-      '473' => {:monsterName => "開膛怪傑 ‧ 傑克"},
+      '473' => {:monsterName => "開膛怪傑‧傑克"},
       '474' => {:monsterName => "理髮魔偶陶德"},
-      '475' => {:monsterName => "戲謔小丑 ‧ 陶德"},
-      '476' => {:monsterName => "冰雪巫師 ‧ 波葛"},
-      '477' => {:monsterName => "惡作劇精靈 ‧ 波加特"},
-      '478' => {:monsterName => "掃除小精靈 ‧ 布朗尼"},
-      '479' => {:monsterName => "沉思的賢者 ‧ 山特古羅斯"},
+      '475' => {:monsterName => "戲謔小丑‧陶德"},
+      '476' => {:monsterName => "冰雪巫師‧波葛"},
+      '477' => {:monsterName => "惡作劇精靈‧波加特"},
+      '478' => {:monsterName => "掃除小精靈‧布朗尼"},
+      '479' => {:monsterName => "沉思的賢者‧山特古羅斯"},
       '480' => {:monsterName => "色慾胎飼魔母"},
       '481' => {:monsterName => "記憶與遺忘 ‧ 女武神烏爾德"},
       '482' => {:monsterName => "開端與終結 ‧ 女武神斯庫爾德"},
@@ -527,50 +529,57 @@ class Monster
   def parse_data(data)
     data.each do |d|
       monster = d.split('|')
-      @data[monster[0]][:monsterId] = monster[0]
-      @data[monster[0]][:seriesId] = monster[1]
-      @data[monster[0]][:levelType] = monster[2]
-      @data[monster[0]][:type] = monster[3]
-      @data[monster[0]][:attribute] = monster[4]
-      @data[monster[0]][:star] = monster[5]
-      @data[monster[0]][:rare] = monster[6]
-      @data[monster[0]][:size] = monster[7]
-      @data[monster[0]][:width] = monster[8]
-      @data[monster[0]][:height] = monster[9]
-      @data[monster[0]][:maxLevel] = monster[10]
-      @data[monster[0]][:expType] = monster[11]
-      @data[monster[0]][:attackDuration] = monster[12]
-      @data[monster[0]][:leaderSkill] = monster[13]
-      @data[monster[0]][:normalSkill] = @normal_skill[monster[14].to_i]
-      @data[monster[0]][:baseMergeExp] = monster[15]
-      @data[monster[0]][:incMergeExp] = monster[16]
-      @data[monster[0]][:baseSellCoin] = monster[17]
-      @data[monster[0]][:incSellCoin] = monster[18]
-      @data[monster[0]][:baseKillCoin] = monster[19]
-      @data[monster[0]][:incKillCoin] = monster[20]
-      @data[monster[0]][:baseEvolveCoin] = monster[21]
-      @data[monster[0]][:minCardHP] = monster[22]
-      @data[monster[0]][:maxCardHP] = monster[23]
-      @data[monster[0]][:minCardAttack] = monster[24]
-      @data[monster[0]][:maxCardAttack] = monster[25]
-      @data[monster[0]][:minCardRecover] = monster[26]
-      @data[monster[0]][:maxCardRecover] = monster[27]
-      @data[monster[0]][:minEnemyHP] = monster[28]
-      @data[monster[0]][:incEnemyHP] = monster[29]
-      @data[monster[0]][:minEnemyAttack] = monster[30]
-      @data[monster[0]][:incEnemyAttack] = monster[31]
-      @data[monster[0]][:minEnemyDefense] = monster[32]
-      @data[monster[0]][:incEnemyDefense] = monster[33]
-      @data[monster[0]][:evolveMonsterId] = monster[34]
-      @data[monster[0]][:evolutionRule0] = monster[35]
-      @data[monster[0]][:evolutionRule1] = monster[36]
-      @data[monster[0]][:evolutionRule2] = monster[37]
-      @data[monster[0]][:evolutionRule3] = monster[38]
-      @data[monster[0]][:evolutionRule4] = monster[39]
-      @data[monster[0]][:shadowOffsetX] = monster[40]
-      @data[monster[0]][:shadowOffsetY] = monster[41]
-      @data[monster[0]][:shadowType] = monster[42]
-      @data[monster[0]][:groupId] = monster[44]
+      mob = @data[monster[0]]
+      mob[:monsterId] = monster[0]
+      mob[:seriesId] = monster[1]
+      mob[:levelType] = monster[2]
+      mob[:type] = monster[3].to_i
+      mob[:attribute] = monster[4].to_i
+      mob[:star] = monster[5].to_i
+      mob[:rare] = monster[6]
+      mob[:size] = monster[7]
+      mob[:width] = monster[8]
+      mob[:height] = monster[9]
+      mob[:maxLevel] = monster[10]
+      mob[:expType] = monster[11]
+      mob[:attackDuration] = monster[12]
+      mob[:leaderSkill] = monster[13]
+      mob[:normalSkill] = @normal_skill[monster[14].to_i]
+      mob[:baseMergeExp] = monster[15]
+      mob[:incMergeExp] = monster[16]
+      mob[:baseSellCoin] = monster[17]
+      mob[:incSellCoin] = monster[18]
+      mob[:baseKillCoin] = monster[19]
+      mob[:incKillCoin] = monster[20]
+      mob[:baseEvolveCoin] = monster[21]
+      mob[:minCardHP] = monster[22]
+      mob[:maxCardHP] = monster[23]
+      mob[:minCardAttack] = monster[24]
+      mob[:maxCardAttack] = monster[25]
+      mob[:minCardRecover] = monster[26]
+      mob[:maxCardRecover] = monster[27]
+      mob[:minEnemyHP] = monster[28]
+      mob[:incEnemyHP] = monster[29]
+      mob[:minEnemyAttack] = monster[30]
+      mob[:incEnemyAttack] = monster[31]
+      mob[:minEnemyDefense] = monster[32]
+      mob[:incEnemyDefense] = monster[33]
+      mob[:evolveMonsterId] = monster[34]
+      mob[:evolutionRule0] = monster[35]
+      mob[:evolutionRule1] = monster[36]
+      mob[:evolutionRule2] = monster[37]
+      mob[:evolutionRule3] = monster[38]
+      mob[:evolutionRule4] = monster[39]
+      mob[:shadowOffsetX] = monster[40]
+      mob[:shadowOffsetY] = monster[41]
+      mob[:shadowType] = monster[42]
+      mob[:groupId] = monster[44]
+      ## color name ###############################################
+      monsterNameDesc = mob[:monsterName]
+      monsterNameDesc = attribute_color(monsterNameDesc,mob[:attribute])
+      starDesc = mob[:star].to_s+attribute_color(" ",0,true);
+      monsterNameDesc = attribute_color("",mob[:type]+10,true) + starDesc + monsterNameDesc
+      mob[:monsterName] = monsterNameDesc
     end
   end
 end

@@ -3,6 +3,7 @@ require 'net/http'
 require 'json'
 require 'logger'
 require 'mechanize'
+require './api'
 require './user'
 require './monster'
 require './floor'
@@ -70,7 +71,7 @@ class Tos
       if z[:requireFloor]
         next unless (@user.data['completedFloorIds'].include? z[:requireFloor].to_i)
       end
-      puts "#{index} #{z[:name]}#{(@floor.stage_bonus['zone'].to_i == index.to_i) ? ' (bonus)' : ''}"
+      puts "[%3d] %s%s" % [index,z[:name],(@floor.stage_bonus['zone'].to_i == index.to_i) ? ' (bonus)'.gold : '']
     end
     print 'Choice zone?(b:back,q:quit)'
     print "[#{@last_zone}]" if @last_zone
@@ -90,11 +91,13 @@ class Tos
         next if Time.now.to_i < Time.at(s[:start_at].to_i).to_i
         next if Time.now.to_i > Time.at(s[:end_at].to_i).to_i
       end
-      print "#{s[:id]} #{s[:name]}"
-      print "(completed)" if (@user.data['completedStageIds'].include? s[:id].to_i)
+      print "[%3d]" % [s[:id]]
+      print ((@user.data['completedStageIds'].include? s[:id].to_i) ? 'v' : ' ').bold.green
+      print s[:name]
+      #print "(completed)".bold if (@user.data['completedStageIds'].include? s[:id].to_i)
       print " #{Time.at(s[:start_at].to_i).strftime('%m/%d %H:%M')} ~ #{Time.at(s[:end_at].to_i).strftime('%m/%d %H:%M')}" unless s[:start_at] == ''
       bonus = @floor.stage_bonus['stages'].select {|v| v['stageId'].to_i == s[:id].to_i }
-      print " (#{@floor.bonus_type[bonus.first['bonusType'].to_i]})" if bonus.length > 0
+      print " (#{@floor.bonus_type[bonus.first['bonusType'].to_i]})".gold if bonus.length > 0
       print "\n"
       if choice_zone.to_i < 7
         last_stage = s[:id]
@@ -111,8 +114,15 @@ class Tos
     puts "Floor list"
     last_floor = nil
     floors = @floor.floors.select {|k| k[:stage] == choice_stage}
+
+    #puts @floor.stage_bonus['stages']
+    stage_bonus = @floor.stage_bonus['stages'].select {|v| v['stageId'].to_s == choice_stage}
+    halfStamina = stage_bonus != nil && stage_bonus.length > 0
+    puts stage_bonus
+    halfStamina = stage_bonus.first['bonusType'].to_s == '1' if halfStamina
     floors.each do |f|
-      puts "#{f[:id]} #{f[:name]} #{f[:stamina]} #{((@user.data['completedFloorIds'].include? f[:id].to_i) ? '(completed)' : '')}"
+      stamina = halfStamina ? (f[:stamina].to_i/2.0).round : f[:stamina]
+      puts "[%3d]%s %2d %s" % [f[:id],((@user.data['completedFloorIds'].include? f[:id].to_i) ? 'v' : ' ').bold.green,stamina,f[:name]]
       last_floor = f[:id]
       break unless (@user.data['completedFloorIds'].include? f[:id].to_i)
     end
@@ -209,8 +219,8 @@ class Tos
       res_json = JSON.parse(page.body)
       return get_error(res_json) if res_json['respond'].to_i != 1
       puts "友情點數：#{res_json['data']['friendpoint']}"
-      puts "經驗值：#{res_json['data']['expGain']}"
-      puts "金錢：#{res_json['data']['coinGain']}"
+      puts "經驗值  ：#{res_json['data']['expGain']}"
+      puts "金錢    ：#{res_json['data']['coinGain']}"
       @user.parse_card_data(res_json['cards'])
       @user.data = res_json['user']
       @user.loots = res_json['data']['loots']

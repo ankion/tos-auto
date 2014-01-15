@@ -1,5 +1,6 @@
 # -*- encoding : utf-8 -*-
 require "addressable/uri"
+require './api'
 require './checksum'
 
 class Floor
@@ -16,6 +17,10 @@ class Floor
       '7' => {:name => '古神遺跡', :requireFloor => 23},
       '8' => {:name => '旅人的記憶', :requireFloor => 88}
     }
+    @zones.each do |index, z|
+      #puts "zones %s %s" % [index,z]
+      z[:name] = attribute_color(z[:name],index.to_i) if z[:name]
+    end
     @bonus_type = {
       0 => 'NONE',
       1 => '體力消耗減 50%',
@@ -154,11 +159,12 @@ class Floor
         enemy_defense = monster[:minEnemyDefense].to_i + (monster[:incEnemyDefense].to_i * e['level'].to_i)
 
         #puts e.inspect
-        puts "\tlv#{e['level']} #{monster[:monsterName]}"
+        puts "\tlv%3d %s" % [e['level'],monster[:monsterName]]
         if e['lootItem']
           loot = e['lootItem']
-          puts "\t\t掉落: lv#{loot['card']['level']} #{user.monster.data[loot['card']['monsterId']][:monsterName]}" if loot['type'] == 'monster'
-          puts "\t\t掉落: #{loot['amount']} Gold" if loot['type'] == 'money'
+          prefix = "戰勵品：".bg_blue.yellow.bold
+          puts "\t#{prefix} lv%d %s" % [loot['card']['level'],user.monster.data[loot['card']['monsterId']][:monsterName]] if loot['type'] == 'monster'
+          puts "\t#{prefix} #{loot['amount']} 金" if loot['type'] == 'money'
         end
         #puts "enemy_hp:#{enemy_hp} enemy_attack:#{enemy_attack}"
         loop do
