@@ -76,7 +76,7 @@ class User
       person = data[index].split('|')
       club = ""
       begin
-        club = person[17].split('#',7)[6]
+        club = person[17].split('#')[6]
       rescue
       end
 
