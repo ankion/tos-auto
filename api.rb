@@ -1,8 +1,11 @@
+require './setting'
+
 ## override String #######################################
 class String
   def color(color,str=self)
-	colors = {
-      'black'         => "\033[30m%s\033[0m", 
+    return str if Settings['no_color']
+    colors = {
+      'black'         => "\033[30m%s\033[0m",
       'red'           => "\033[31m%s\033[0m",  #紅
       'green'         => "\033[32m%s\033[0m",  #綠
       'yellow'        => "\033[33m%s\033[0m",  #黃
@@ -11,26 +14,26 @@ class String
       'pink'          => "\033[35m%s\033[0m",  #粉紅
       'cyan'          => "\033[36m%s\033[0m",  #青
       'gray'          => "\033[37m%s\033[0m",  #灰
-      'bg_black'      => "\033[40m%s\033[0m", 
-      'bg_red'        => "\033[41m%s\033[0m", 
-      'bg_green'      => "\033[42m%s\033[0m", 
-      'bg_yellow'     => "\033[43m%s\033[0m", 
-      'bg_blue'       => "\033[44m%s\033[0m", 
-      'bg_pink'       => "\033[45m%s\033[0m", 
-      'bg_cyan'       => "\033[46m%s\033[0m", 
-      'bg_gray'       => "\033[47m%s\033[0m", 
+      'bg_black'      => "\033[40m%s\033[0m",
+      'bg_red'        => "\033[41m%s\033[0m",
+      'bg_green'      => "\033[42m%s\033[0m",
+      'bg_yellow'     => "\033[43m%s\033[0m",
+      'bg_blue'       => "\033[44m%s\033[0m",
+      'bg_pink'       => "\033[45m%s\033[0m",
+      'bg_cyan'       => "\033[46m%s\033[0m",
+      'bg_gray'       => "\033[47m%s\033[0m",
       'bold'          => "\033[1m%s\033[22m",  #高亮
       'reverse_color' => "\033[7m%s\033[27m"   #反白
-	}
-	#puts "colorStr(#{color} ,#{str}) : "
-	str = colors[color.to_s] %str if colors[color.to_s]
-	return str
+    }
+    #puts "colorStr(#{color} ,#{str}) : "
+    str = colors[color.to_s] %str if colors[color.to_s]
+    return str
   end
   def black;          color(__method__) end
   def red;            color(__method__) end
   def green;          color(__method__) end
   def yellow;         color(__method__) end
-  def gold;         color(__method__) end
+  def gold;           color(__method__) end
   def blue;           color(__method__) end
   def pink;           color(__method__) end
   def cyan;           color(__method__) end
@@ -51,9 +54,9 @@ end
 tz_name = 'Asia/Taipei'
 prev_tz = ENV['TZ']
 begin
-ENV['TZ'] = tz_name
+  ENV['TZ'] = tz_name
 rescue
-ENV['TZ'] = prev_tz
+  ENV['TZ'] = prev_tz
 end
 #########################################
 def print_wait(times)
@@ -70,7 +73,7 @@ def print_wait(times)
   end
 end
 #########################################
-def puts_wait(times) 
+def puts_wait(times)
   print_wait(times)
   print " " * ("#{times*10}".size+1)
   print "\n"
@@ -88,9 +91,9 @@ def spinner(code)
   t.join
 end
 =begin show_wait_spinner ##################
-show_wait_spinner{ 
+show_wait_spinner{
   # do some thing
-  sleep rand(4)+2 
+  sleep rand(4)+2
 }
 =end   ##################
 def show_wait_spinner(fps=10)
@@ -112,11 +115,11 @@ def show_wait_spinner(fps=10)
 end
 #############################################
 =begin
-\e[D #left	
-\e[B 	
-\e[D #left	
-\e[D #left	
-	
+\e[D #left
+\e[B
+\e[D #left
+\e[D #left
+
 =end
 ####
 #outputs color table to console, regular and bold modes
@@ -131,7 +134,7 @@ def colortable
   puts '          40       41       42       43       44       45       46       47       49'
   names.zip(fgcodes).each {|name,fg|
     s = "#{fg}"
-    puts "%7s "%name + "#{reg}  #{bold}   "*9 % [fg,40,s,fg,40,s,  fg,41,s,fg,41,s,  fg,42,s,fg,42,s,  fg,43,s,fg,43,s,  
+    puts "%7s "%name + "#{reg}  #{bold}   "*9 % [fg,40,s,fg,40,s,  fg,41,s,fg,41,s,  fg,42,s,fg,42,s,  fg,43,s,fg,43,s,
       fg,44,s,fg,44,s,  fg,45,s,fg,45,s,  fg,46,s,fg,46,s,  fg,47,s,fg,47,s,  fg,49,s,fg,49,s ]
   }
 end
@@ -149,7 +152,7 @@ def attribute_color(str,attribute=-1,prefix=false)
   when 0 #
   	str = str
   when 1 #water
-    str = str.cyan.bold 
+    str = str.cyan.bold
   when 2 #fire
     str = str.red
   when 3 #wood
