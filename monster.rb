@@ -483,7 +483,29 @@ class Monster
       '476' => {:monsterName => "冰雪巫師 ‧ 波葛"},
       '477' => {:monsterName => "惡作劇精靈 ‧ 波加特"},
       '478' => {:monsterName => "掃除小精靈 ‧ 布朗尼"},
-      '479' => {:monsterName => "沉思的賢者 ‧ 山特古羅斯"}
+      '479' => {:monsterName => "沉思的賢者 ‧ 山特古羅斯"},
+      '480' => {:monsterName => "色慾胎飼魔母"},
+      '481' => {:monsterName => "記憶與遺忘 ‧ 女武神烏爾德"},
+      '482' => {:monsterName => "開端與終結 ‧ 女武神斯庫爾德"},
+      '483' => {:monsterName => "命定與改變 ‧ 女武神薇兒丹蒂"},
+      '484' => {:monsterName => "神木之眷 ‧ 永祭之伊登"},
+      '485' => {:monsterName => "破刃之鐮 ‧ 布倫希爾德"},
+      '486' => {:monsterName => "水龍牙棋"},
+      '487' => {:monsterName => "火龍牙棋"},
+      '488' => {:monsterName => "木龍牙棋"},
+      '489' => {:monsterName => "光龍牙棋"},
+      '490' => {:monsterName => "暗龍牙棋"},
+      '491' => {:monsterName => "仰望者瘋帽"},
+      '492' => {:monsterName => "狂人三月兔"},
+      '493' => {:monsterName => "建言者書頁蟲"},
+      '494' => {:monsterName => "餐桌騎士睡鼠"},
+      '495' => {:monsterName => "魔郡咧齒貓"},
+      '496' => {:monsterName => "魔境之主 紅心女王"},
+      '497' => {:monsterName => "笑容守護犬"},
+      '498' => {:monsterName => "福德神寵 ‧ 笑犬"},
+      '499' => {:monsterName => "怒顏守護犬"},
+      '500' => {:monsterName => "懲惡神衛 ‧ 怒犬"},
+      '501' => {:monsterName => "韶光仙獸 ‧ 年"}
     }
     @normal_skill = nil
   end

@@ -52,7 +52,7 @@ class User
       #:session => 'c51b955d9535eb1722e898e683be51e3',
       :language => 'zh_TW',
       :platform => Settings['platform'],
-      :version => '4.03',
+      :version => '4.51',
       :timestamp => '',
       :timezone => '8',
       :nData => ''
@@ -76,9 +76,9 @@ class User
       club = ""
       begin
         club = person[17].split('#',7)[6]
-      rescue 
+      rescue
       end
-      
+
       person_data = {
         :uid => person[0],
         :name => person[1],
