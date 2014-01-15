@@ -245,11 +245,19 @@ class Floor
       #@acs_data[:h] = @acs_data[:d]
       #@acs_data[:c] = "#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)}"
     #end
+    base_time = (6 + rand(3))
     bonus_time = 1
     bonus_time += 1 if @acs_data[:a] > 20
     bonus_time += 1 if @acs_data[:a] > 40
 
-    @acs_data[:e] = (Time.now + (((6 + rand(3)) * (@acs_data[:a] + @acs_data[:d]) ) * bonus_time)) - Time.now
+    if Settings['fast_mode']
+      base_time = 3
+      bonus_time = 1
+    end
+
+    @acs_data[:e] = (Time.now + ((base_time * (@acs_data[:a] + @acs_data[:d]) ) * bonus_time)) - Time.now
+
+    @acs_data[:e] = 25.0 if @acs_data[:e] < 25.0
     #loop do
       #break if @acs_data[:e] < 1200
       #@acs_data[:e] -= 100
