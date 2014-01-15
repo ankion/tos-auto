@@ -254,6 +254,7 @@ class Floor
       #break if @acs_data[:e] < 1200
       #@acs_data[:e] -= 100
     #end
+    puts "floorId:#{@wave_floor}"
     puts "maxAttack:#{@finish_data[:maxAttack]} maxCombo:#{@finish_data[:maxCombo]}"
     puts "round:#{@acs_data[:a]} retry:#{@acs_data[:d]} die:#{@acs_data[:h]}"
     puts "monsterAttackTime:#{@acs_data[:i]} totalDamage:#{@acs_data[:r]}"

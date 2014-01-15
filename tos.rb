@@ -22,6 +22,7 @@ class Tos
       agent.follow_meta_refresh = true
     }
     @auto_repeat = false
+    @auto_repeat_next = false
     @auto_sell = false #Settings['auto_sell'] || false
     @sell_cards = Settings['sell_cards'] || []
     @auto_merge = Settings['auto_merge'] || false
@@ -48,10 +49,15 @@ class Tos
     @floor.stage_bonus = res_json['data']['stageBonus']
     puts '======================================'
     @user.print_user_sc
-    print 'Auto replay the same floor?(y/N)'
+    print 'Auto play?(y/N)'
     choice_auto_repeat = $stdin.gets.chomp
     exit if choice_auto_repeat == 'q'
-    @auto_repeat = true if choice_auto_repeat == 'y'
+    if choice_auto_repeat == 'y'
+      @auto_repeat = true
+      print 'Auto play next floor?(y/N)'
+      choice_auto_repeat_next = $stdin.gets.chomp
+      @auto_repeat_next = true if choice_auto_repeat_next == 'y'
+    end
     #puts @user.cards['10'].inspect
     #@user.print_teams
     @user.print_teams
@@ -247,6 +253,7 @@ class Tos
     puts '======================================'
     @user.print_user_sc
     if @auto_repeat
+      @floor.wave_floor = (@floor.wave_floor.to_i + 1).to_s if @auto_repeat_next
       print "Auto play again start at 5 sec."
       5.times do
         sleep 1.0
