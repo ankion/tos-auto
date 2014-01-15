@@ -436,7 +436,7 @@ class Monster
       '427' => {:monsterName => "大耳兔"},
       '428' => {:monsterName => "冒險兔"},
       '429' => {:monsterName => "追憶旅人"},
-      '430' => {:monsterName => "４３０"},
+      '430' => {:monsterName => "號角手加拉爾"},
       '431' => {:monsterName => "貪婪精靈女王"},
       '432' => {:monsterName => "奪寶海盜"},
       '433' => {:monsterName => "冰晶領航者‧奪寶海盜"},
