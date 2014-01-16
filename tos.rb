@@ -284,12 +284,20 @@ class Tos
   end
 end
 
-a = Tos.new
-a.login
-loop do
-  next unless a.choice_floor
+def running
+  a = Tos.new
+  a.login
   loop do
-    break if a.get_helper_list
-    break if a.fighting
+    next unless a.choice_floor
+    loop do
+      break if a.get_helper_list
+      break if a.fighting
+    end
   end
+end
+
+begin
+  Thread.new(running)
+rescue Interrupt
+  puts "\nQuitting."
 end
