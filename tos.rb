@@ -3,6 +3,7 @@ require 'net/http'
 require 'json'
 require 'logger'
 require 'mechanize'
+require 'readline'
 require './api'
 require './user'
 require './monster'
@@ -65,22 +66,22 @@ class Tos
     @floor.stage_bonus = res_json['data']['stageBonus']
     puts '======================================'
     @user.print_user_sc
-    print 'Auto play?(y/N)'
-    choice_auto_repeat = $stdin.gets.chomp
+    prompt = 'Auto play?(y/N)'
+    choice_auto_repeat = Readline.readline(prompt, true)
     exit if choice_auto_repeat == 'q'
     if choice_auto_repeat == 'y'
       @auto_repeat = true
-      print 'Auto play next floor?(y/N)'
-      choice_auto_repeat_next = $stdin.gets.chomp
+      prompt = 'Auto play next floor?(y/N)'
+      choice_auto_repeat_next = Readline.readline(prompt, true)
       @auto_repeat_next = true if choice_auto_repeat_next == 'y'
     end
     #puts @user.cards['10'].inspect
     #@user.print_teams
     @user.print_teams
     auto_team = @user.auto_get_team
-    print 'Choice team?'
-    print "[#{auto_team}]" if auto_team
-    choice_team =  $stdin.gets.chomp
+    prompt = 'Choice team?'
+    prompt += "[#{auto_team}]" if auto_team
+    choice_team =  Readline.readline(prompt, true)
     exit if choice_team == 'q'
     choice_team = auto_team if auto_team and choice_team == ''
     @floor.wave_team = choice_team.to_i - 1
@@ -95,9 +96,9 @@ class Tos
       end
       puts "[%3d] %s%s" % [index,z[:name],(@floor.stage_bonus['zone'].to_i == index.to_i) ? ' (bonus)'.gold : '']
     end
-    print 'Choice zone?(b:back,q:quit)'
-    print "[#{@last_zone}]" if @last_zone
-    choice_zone = $stdin.gets.chomp
+    prompt = 'Choice zone?(b:back,q:quit)'
+    prompt += "[#{@last_zone}]" if @last_zone
+    choice_zone = Readline.readline(prompt, true)
     exit if choice_zone == 'q'
     return false if choice_zone == 'b'
     choice_zone = @last_zone if @last_zone and choice_zone == ''
@@ -126,9 +127,9 @@ class Tos
         break unless (@user.data['completedStageIds'].include? s[:id].to_i)
       end
     end
-    print 'Choice stage?(b:back,q:quit)'
-    print "[#{last_stage}]" if last_stage
-    choice_stage = $stdin.gets.chomp
+    prompt = 'Choice stage?(b:back,q:quit)'
+    prompt += "[#{last_stage}]" if last_stage
+    choice_stage = Readline.readline(prompt, true)
     exit if choice_stage == 'q'
     return false if choice_stage == 'b'
     choice_stage = last_stage if last_stage and choice_stage == ''
@@ -148,9 +149,9 @@ class Tos
       last_floor = f[:id]
       break unless (@user.data['completedFloorIds'].include? f[:id].to_i)
     end
-    print 'Choice floor?(b:back,q:quit)'
-    print "[#{last_floor}]" if last_floor
-    choice_floor =  $stdin.gets.chomp
+    prompt = 'Choice floor?(b:back,q:quit)'
+    prompt += "[#{last_floor}]" if last_floor
+    choice_floor = Readline.readline(prompt, true)
     exit if choice_floor == 'q'
     return false if choice_floor == 'b'
     choice_floor = last_floor if last_floor and choice_floor == ''
@@ -174,9 +175,9 @@ class Tos
       puts "Auto choice helper?#{choice_helper}"
       return false
     end
-    print 'Choice helper?(b:back,q:quit)'
-    print "[auto]"
-    choice_helper =  $stdin.gets.chomp
+    prompt = 'Choice helper?(b:back,q:quit)'
+    prompt += "[auto]"
+    choice_helper = Readline.readline(prompt, true)
     exit if choice_helper == 'q'
     return true if choice_helper == 'b'
     choice_helper = (1 + rand(3)).to_s if choice_helper == ''
@@ -242,8 +243,8 @@ class Tos
       print "\n"
       return false
     end
-    print 'Play again?(y/N)'
-    return false if  $stdin.gets.chomp == 'y'
+    prompt = 'Play again?(y/N)'
+    return false if Readline.readline(prompt, true) == 'y'
     return true
   end
 
