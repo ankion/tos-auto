@@ -32,7 +32,7 @@ class Floor
       7 => 'ALERT'
     }
     @one_time_floors = [222, 488]
-    @one_time_stages = [63, 150, 132]
+    @one_time_stages = [63, 150, 132, 178]
     @stages = []
     @floors = []
     @waves_data = nil
