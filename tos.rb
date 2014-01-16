@@ -30,15 +30,31 @@ class Tos
     @last_zone = nil
   end
 
+  def page_post(url)
+    res_json = nil
+
+    loop do
+      page = @web.get("#{@tos_url}#{url}")
+      @logger.info page.body
+      res_json = JSON.parse(page.body)
+      break if res_json['respond'].to_i == 1
+      puts res_json.inspect
+      if res_json['respond'].to_i == 6 or res_json['respond'].to_i == 3
+        #puts res_json['respond']['errorMessage']
+        wait_time = res_json['wait'] ? res_json['wait'].to_i : 600
+        print_wait(wait_time)
+        next
+      end
+      exit
+    end
+
+    res_json
+  end
+
   def login
     puts '登入遊戲中.....'
-    page = @web.get("#{@tos_url}#{@user.get_login_url}")
-    @logger.info page.body
-    #uri = URI("#{@tos_url}#{@user.get_login_url}")
-    #res = Net::HTTP.get_response(uri)
+    res_json = page_post(@user.get_login_url)
     puts '登入成功'
-    res_json = JSON.parse(page.body)
-    exit get_error(res_json) if res_json['respond'].to_i != 1
     puts '取得資料'
     @user.data = res_json['user']
     @user.bookmarks = res_json['user']['bookmarks']
@@ -148,15 +164,8 @@ class Tos
       exit
     end
     puts '取得隊友名單'
-    page = @web.get("#{@tos_url}#{@floor.get_helpers_url(@user)}")
-    @logger.info page.body
-    #uri = URI("#{@tos_url}#{@floor.get_helpers_url(@user, 16)}")
-    #res = Net::HTTP.get_response(uri)
-    res_json = JSON.parse(page.body)
-    return get_error(res_json) if res_json['respond'].to_i != 1
+    res_json = page_post(@floor.get_helpers_url(@user))
     helpers = res_json['data']['alluserList']
-    #puts res_json['data']
-    #puts helpers.inspect
     @user.parse_helpers_data(helpers)
     @user.print_helpers
     if @auto_repeat
@@ -177,25 +186,7 @@ class Tos
   end
 
   def fighting
-    #puts @floor.get_enter_url(@user, choice_floor, (choice_team.to_i - 1), @user.helpers[choice_helper.to_i])
-    page = @web.get("#{@tos_url}#{@floor.get_enter_url(@user)}")
-    @logger.info page.body
-    #puts page.body
-    res_json = JSON.parse(page.body)
-    if @auto_repeat and res_json['respond'].to_i == 3
-      puts res_json['errorMessage']
-      wait_secs = 60 * 10
-      puts "Auto play again start at #{wait_secs} sec."
-      print "[                                        ]\r["
-      40.times do
-        sleep (wait_secs/40)
-        print '#'
-      end
-      print "\n"
-
-      return false
-    end
-    return get_error(res_json) if res_json['respond'].to_i != 1
+    res_json = page_post(@floor.get_enter_url(@user))
     @floor.waves_data = res_json['data']
 
     @floor.set_complete(@user)
@@ -212,18 +203,10 @@ class Tos
 
     res_json = nil
     if @floor.wave_fail and not @floor.one_time_floor?
-      page = @web.get("#{@tos_url}#{@floor.get_fail_url(@user)}")
-      @logger.info page.body
-      res_json = JSON.parse(page.body)
-      return get_error(res_json) if res_json['respond'].to_i != 1
+      res_json = page_post(@floor.get_fail_url(@user))
       @user.data['currentStamina'] = res_json['user']['currentStamina']
     else
-      #@floor.get_complete_url(@user, finish_data, acs_data)
-      page = @web.get("#{@tos_url}#{@floor.get_complete_url(@user)}")
-      @logger.info page.body
-      #puts page.body
-      res_json = JSON.parse(page.body)
-      return get_error(res_json) if res_json['respond'].to_i != 1
+      res_json = page_post(@floor.get_complete_url(@user))
       puts "友情點數：#{res_json['data']['friendpoint']}"
       puts "經驗值  ：#{res_json['data']['expGain']}"
       puts "金錢    ：#{res_json['data']['coinGain']}"
@@ -239,10 +222,7 @@ class Tos
           targetCardIds = @user.get_sell_card(@sell_cards)
           break if targetCardIds.length == 0
           puts "Selling cards(#{targetCardIds.join(',')})"
-          page = @web.get("#{@tos_url}#{@user.get_sell_url(targetCardIds)}")
-          @logger.info page.body
-          res_json = JSON.parse(page.body)
-          break get_error(res_json) if res_json['respond'].to_i != 1
+          res_json = page_post(@user.get_sell_url(targetCardIds))
           @user.parse_card_data(res_json['cards'])
           @user.data['coin'] = res_json['user']['coin']
           @user.data['totalCards'] = res_json['user']['totalCards']
@@ -286,10 +266,7 @@ class Tos
           end
           print ")\n"
           unless debug
-            page = @web.get("#{@tos_url}#{@user.get_merge_url(sourceCardId, targetCardIds)}")
-            @logger.info page.body
-            res_json = JSON.parse(page.body)
-            break get_error(res_json) if res_json['respond'].to_i != 1
+            res_json = page_post(@user.get_merge_url(sourceCardId, targetCardIds))
             @user.parse_card_data(res_json['cards'])
             @user.data['coin'] = res_json['user']['coin']
             @user.data['totalCards'] = res_json['user']['totalCards']
