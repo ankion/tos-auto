@@ -141,7 +141,7 @@ class Tos
     #puts @floor.stage_bonus['stages']
     stage_bonus = @floor.stage_bonus['stages'].select {|v| v['stageId'].to_s == choice_stage}
     halfStamina = stage_bonus != nil && stage_bonus.length > 0
-    puts stage_bonus
+    #puts stage_bonus
     halfStamina = stage_bonus.first['bonusType'].to_s == '1' if halfStamina
     floors.each do |f|
       stamina = halfStamina ? (f[:stamina].to_i/2.0).round : f[:stamina]
