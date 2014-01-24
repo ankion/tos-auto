@@ -53,7 +53,7 @@ class User
       #:session => 'c51b955d9535eb1722e898e683be51e3',
       :language => 'zh_TW',
       :platform => Settings['platform'],
-      :version => '4.51',
+      :version => '4.54',
       :timestamp => '',
       :timezone => '8',
       :nData => ''
