@@ -35,7 +35,11 @@ class Tos
     res_json = nil
 
     loop do
-      page = @web.get("#{@tos_url}#{url}")
+      full_url = "#{@tos_url}#{url}"
+      page = @web.post(full_url, {
+        "frags" => Digest::MD5.hexdigest(Digest::MD5.hexdigest(full_url)),
+        "attempt" => "1"
+      })
       @logger.info page.body
       res_json = JSON.parse(page.body)
       break if res_json['respond'].to_i == 1
