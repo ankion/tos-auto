@@ -74,12 +74,12 @@ class User
     @helpers = {}
     data.each_index do |index|
       person = data[index].split('|')
+      #puts person
       club = ""
       begin
         club = person[17].split('#')[6]
       rescue
       end
-
       person_data = {
         :uid => person[0],
         :name => person[1],
@@ -88,6 +88,7 @@ class User
         :monsterId => person[8],
         :monsterLevel => person[10],
         :skillLevel => person[11],
+        :friendPoint => person[13].to_i || 0,
         :coolDown => "#{Integer(@monster.data[person[8]][:normalSkill][:maxCoolDown]) - Integer(person[11]) + 1}",
         :club => club ,
         :monster_name => @monster.data[person[8]][:monsterName],
@@ -152,11 +153,14 @@ class User
       :timezone => @post_data[:timezone],
       :nData => encypt.getNData
     }
+=begin
     uri = Addressable::URI.new
     uri.query_values = post_data
     url = "/api/card/sell?#{uri.query}"
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
+=end
+    return TosUrl.new :path => "/api/card/sell" ,:data => post_data
   end
 
   def print_cards
@@ -258,11 +262,14 @@ class User
       :bookmarks => @bookmarks.join(','),
       :nData => encypt.getNData
     }
+=begin
     uri = Addressable::URI.new
     uri.query_values = post_data
     url = "/api/card/merge?#{uri.query}"
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
+=end
+    return TosUrl.new :path => "/api/card/merge" ,:data => post_data
   end
 
   def auto_get_team
@@ -350,7 +357,7 @@ class User
   def print_helpers
     @helpers.each do |index, h|
       #puts "[#{index}] #{h[:uid]} #{h[:name]} #{h[:level]} #{h[:monster_name]}"
-      puts "[%3d] LV:%2d CD:%2d %s : %s %s" % [index,h[:monsterLevel],h[:coolDown],h[:monster_name],"【#{h[:club]}】".yellow,h[:name]]
+      puts "[%3d] LV:%2d CD:%2d FP+%2s %s : %s %s" % [index,h[:monsterLevel],h[:coolDown],h[:friendPoint],h[:monster_name],(h[:club] == nil || h[:club] == '' ? "" : "【#{h[:club]}】").pink ,h[:name]]
     end
   end
 
@@ -373,6 +380,7 @@ class User
   end
 
   def get_login_url
+=begin
     encypt = Checksum.new
     @post_data[:timestamp] = Time.now.to_i
     @post_data[:nData] = encypt.getNData
@@ -380,5 +388,22 @@ class User
     uri.query_values = @post_data
     login_url = "/api/user/login?#{uri.query}"
     return "#{login_url}&hash=#{encypt.getHash(login_url, '')}"
+=end
+    return TosUrl.new :path => "/api/user/login" ,:data => @post_data
   end
+
+  def add_friend_url(targetUid)
+    encypt = Checksum.new
+    post_data = {
+      :targetUid => targetUid,
+      :uid => @data['uid'],
+      :session => @data['session'],
+      :language => @post_data[:language],
+      :platform => @post_data[:platform],
+      :version => @post_data[:version],
+      :timestamp => Time.now.to_i,
+      :timezone => @post_data[:timezone],
+      :nData => encypt.getNData
+    }
+    return TosUrl.new :path => "/api/user/request/send" ,:data => post_data  end
 end

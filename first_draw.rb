@@ -5,6 +5,9 @@ require "./monster"
 require 'json'
 require 'logger'
 require 'mechanize'
+
+@tos_url = Settings['tos_url']
+
 def general_uniquekey(deviceKey)
   seed_string = "#{deviceKey}#{Time.now.to_i}#{rand(999999999)}"
   Digest::MD5.hexdigest(seed_string)

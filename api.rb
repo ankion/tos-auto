@@ -1,5 +1,7 @@
 # -*- encoding : utf-8 -*-
+require "addressable/uri"
 require './setting'
+require "./checksum"
 
 ## override String #######################################
 class String
@@ -107,7 +109,7 @@ def show_wait_spinner(fps=10)
       sleep delay
       print "\b"
     end
-    print "\07"    # beep
+    print " \b\07"    # beep
   end
   yield.tap{       # After yielding to the block, save the return value
     iter = false   # Tell the thread to exit, cleaning up after itself…
@@ -190,4 +192,29 @@ def attribute_color(str,attribute=-1,prefix=false)
   	str = str.bold
   end
   return str
+end
+## each time to string refresh timestamp & hash ###########
+class TosUrl
+  attr_reader :path, :data, :acs_path, :acs_data
+  def initialize args
+    args.each do |k,v|
+      #puts "k:#{k} ,v:#{v}"
+      instance_variable_set("@#{k}", v) unless v.nil?
+    end
+  end
+  def to_s
+    encypt = Checksum.new
+    uri = Addressable::URI.new
+    tmp = @data
+    tmp[:timestamp]=Time.now.to_i
+    tmp[:nData]=encypt.getNData
+    uri.query_values = data
+    rt = "#{@path}?#{uri.query}"
+    rt = "#{rt}&hash=#{encypt.getHash(rt, '')}"
+    #puts "TosUrl.to_s - #{rt}"
+    return rt
+  end
+  def inspect
+    to_s
+  end
 end

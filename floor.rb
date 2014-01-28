@@ -293,11 +293,14 @@ class Floor
       :timezone => user.post_data[:timezone],
       :nData => encypt.getNData
     }
+=begin    
     uri = Addressable::URI.new
     uri.query_values = post_data
     url = "/api/floor/helpers?#{uri.query}"
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
+=end
+    return TosUrl.new :path => "/api/floor/helpers" ,:data => post_data
   end
 
   def get_enter_url(user)
@@ -316,11 +319,14 @@ class Floor
       :timezone => user.post_data[:timezone],
       :nData => encypt.getNData
     }
+=begin
     uri = Addressable::URI.new
     uri.query_values = post_data
     url = "/api/floor/enter?#{uri.query}"
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
+=end
+    return TosUrl.new :path => "/api/floor/enter" ,:data => post_data
   end
 
   def get_fail_url(user)
@@ -338,11 +344,14 @@ class Floor
       :timezone => user.post_data[:timezone],
       :nData => encypt.getNData
     }
+=begin    
     uri = Addressable::URI.new
     uri.query_values = post_data
     url = "/api/floor/fail?#{uri.query}"
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
+=end
+    return TosUrl.new :path => "api/floor/fail" ,:data => post_data    
   end
 
   def get_complete_url(user)
@@ -355,7 +364,7 @@ class Floor
     @finish_data[:timestamp] = Time.now.to_i
     @finish_data[:timezone] = user.post_data[:timezone]
     @finish_data[:nData] = encypt.getNData
-
+#
     acs_uri = Addressable::URI.new
     acs_uri.query_values = @acs_data
     acs_url = acs_uri.query

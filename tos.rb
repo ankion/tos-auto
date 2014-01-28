@@ -11,6 +11,7 @@ require './floor'
 require './setting'
 
 class Tos
+  attr_accessor :user
   def initialize
     file_name = "logfile.log.#{ARGV[0] ? ARGV[0] : 'defaults'}"
     File.delete(file_name) if File.exists? file_name
@@ -33,7 +34,6 @@ class Tos
 
   def page_post(url)
     res_json = nil
-
     loop do
       full_url = "#{@tos_url}#{url}"
       page = @web.post(full_url, {
