@@ -36,6 +36,7 @@ def send_tos(web,encypt,url)
   begin
     full_url = "http://zh.towerofsaviors.com#{url}&hash=#{encypt.getHash(url, '')}"
     page = web.post(full_url, {
+      "systemInfo" => "%7b%22appVersion%22%3a%224.54%22%2c%22deviceModel%22%3a%22Motorola+MB525%22%2c%22deviceType%22%3a%22Handheld%22%2c%22deviceUniqueIdentifier%22%3a%22#{@dKey}%22%2c%22operatingSystem%22%3a%22Android+OS+2.3.7+%2f+API-10+(GWK74%2f20130501)%22%2c%22systemVersion%22%3a%222.3.7%22%2c%22processorType%22%3a%22ARMv7+VFPv3+NEON%22%2c%22processorCount%22%3a%221%22%2c%22systemMemorySize%22%3a%22477%22%2c%22graphicsMemorySize%22%3a%2235%22%2c%22graphicsDeviceName%22%3a%22PowerVR+SGX+530%22%2c%22graphicsDeviceVendor%22%3a%22Imagination+Technologies%22%2c%22graphicsDeviceVersion%22%3a%22OpenGL+ES-CM+1.1%22%2c%22emua%22%3a%22FALSE%22%2c%22emub%22%3a%22FALSE%22%2c%22npotSupport%22%3a%22None%22%2c%22supportsAccelerometer%22%3a%22True%22%2c%22supportsGyroscope%22%3a%22False%22%2c%22supportsLocationService%22%3a%22True%22%2c%22supportsVibration%22%3a%22True%22%2c%22maxTextureSize%22%3a%222048%22%2c%22screenWidth%22%3a%22480%22%2c%22screenHeight%22%3a%22854%22%2c%22screenDPI%22%3a%22264.7876%22%2c%22IDFA%22%3a%22%22%2c%22IDFV%22%3a%22%22%2c%22MAC%22%3a%2240%3afc%3a89%3a02%3ab3%3a55%22%2c%22networkType%22%3a%22WIFI%22%7d",
       "frags" => Digest::MD5.hexdigest(Digest::MD5.hexdigest(full_url)),
       "attempt" => "1"
     })
@@ -70,6 +71,7 @@ def send_tos(web,encypt,url)
 end
 #########################################
 count = 500
+@dKey = nil
 @monster = Monster.new
 =begin
 nowT = Time.new
@@ -82,6 +84,7 @@ index = 0
 count.times do
   encypt = Checksum.new
   deviceKey = general_devicekey
+  @dKey = deviceKey
   uniqueKey = general_uniquekey(deviceKey)
   web = Mechanize.new { |agent|
     agent.follow_meta_refresh = true
