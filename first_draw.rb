@@ -31,18 +31,15 @@ def is_good_card(card_id)
   goods.include? card_id
 end
 #########################################
-def send_tos(web,encypt,url,is_post=false)
+def send_tos(web,encypt,url)
   res_json = nil
   begin
-    if is_post
-      full_url = "http://zh.towerofsaviors.com#{url}&hash=#{encypt.getHash(url, '')}"
-      page = @web.post(full_url, {
-        "frags" => Digest::MD5.hexdigest(Digest::MD5.hexdigest(full_url)),
-        "attempt" => "1"
-      })
-    else
-      page = web.get("http://zh.towerofsaviors.com#{url}&hash=#{encypt.getHash(url, '')}")
-    end
+    full_url = "http://zh.towerofsaviors.com#{url}&hash=#{encypt.getHash(url, '')}"
+    page = web.post(full_url, {
+      "frags" => Digest::MD5.hexdigest(Digest::MD5.hexdigest(full_url)),
+      "attempt" => "1"
+    })
+    #page = web.get("http://zh.towerofsaviors.com#{url}&hash=#{encypt.getHash(url, '')}")
     res_json = JSON.parse(page.body)
     respond = res_json['respond'].to_i
     if respond != 1
@@ -108,7 +105,7 @@ count.times do
 ###############################################
   print 'floor/complete > '
   url = "/api/floor/complete?floorId=1&team=0&floorHash=#{floorHash}&waves=3&maxAttack=34&maxCombo=3&minLoad=151.123046875&maxLoad=3362.57885742188&avgLoad=825.908402876421&bootTime=17657.2880859375&a=4&b=3&c=0%2c0%2c0%2c0%2c0%2c0&d=0&e=82.80643&f=3&g=3&h=0&i=1&j=1&k=36&l=180&n=&o=144&p=144&r=144&s=0&t=0&u=75&v=75&w=75&x=167&acsh=14a79b7ae0ae352aeb7e6a15a75cd500&uid=#{uid}&session=#{session}&language=zh_TW&platform=android&version=4.54&timestamp=#{Time.now.to_i}&timezone=8&nData=#{encypt.getNData}"
-  res_json = send_tos(web,encypt,url,true)
+  res_json = send_tos(web,encypt,url)
   print_wait(1)
 ###############################################
   print 'user/team/save > '
@@ -132,7 +129,7 @@ count.times do
 ###############################################
   print 'floor/complete > '
   url = "/api/floor/complete?floorId=2&team=0&floorHash=#{floorHash}&helper_uid=#{helperUid}&waves=3&maxAttack=105&maxCombo=3&minLoad=108.06201171875&maxLoad=3362.57885742188&avgLoad=468.569119966947&bootTime=17657.2880859375&a=7&b=3&c=0%2c0%2c0%2c0%2c0%2c0&d=0&e=72.23418&f=3&g=5&h=0&i=1&j=1&k=424&l=444&n=&o=20&p=20&r=20&s=0&t=0&u=294&v=294&w=294&x=317&acsh=6326e49693f85c18417fdff284c13ad2&uid=#{uid}&session=#{session}&language=zh_TW&platform=android&version=4.54&timestamp=#{Time.now.to_i}&timezone=8&nData=#{encypt.getNData}"
-  res_json = send_tos(web,encypt,url,true)
+  res_json = send_tos(web,encypt,url)
   print_wait(1)
 ###############################################
   print 'card/merge > '
@@ -160,7 +157,7 @@ count.times do
 ###############################################
   print 'floor/complete > '
   url = "/api/floor/complete?floorId=3&team=0&floorHash=#{floorHash}&helper_uid=#{helperUid}&waves=3&maxAttack=1147&maxCombo=5&minLoad=80.994140625&maxLoad=3362.57885742188&avgLoad=344.047047932943&bootTime=17657.2880859375&a=3&b=3&c=1%2c0%2c0%2c0%2c0%2c0&d=0&e=51.50079&f=3&g=5&h=0&i=0&j=1&k=1616&l=1616&n=&o=0&p=0&r=0&s=0&t=0&u=580&v=580&w=580&x=493&acsh=6defba64223421bc6629eccf2b7f69a8&uid=#{uid}&session=#{session}&language=zh_TW&platform=android&version=4.54&timestamp=#{Time.now.to_i}&timezone=8&nData=#{encypt.getNData}"
-  res_json = send_tos(web,encypt,url,true)
+  res_json = send_tos(web,encypt,url)
   print_wait(1)
 ###############################################
   print 'user/diamond/luckydraw > '
