@@ -15,7 +15,8 @@ class Floor
       '5' => {:name => '暗夜深淵', :requireFloor => 20},
       '6' => {:name => '以諾塔'},
       '7' => {:name => '古神遺跡', :requireFloor => 23},
-      '8' => {:name => '旅人的記憶', :requireFloor => 88}
+      '8' => {:name => '旅人的記憶', :requireFloor => 88},
+      '9' => {:name => '布蘭克洞窟'}
     }
     @zones.each do |index, z|
       #puts "zones %s %s" % [index,z]
