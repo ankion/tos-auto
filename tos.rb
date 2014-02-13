@@ -95,6 +95,7 @@ class Tos
   def choice_floor
     puts 'Zone list'
     @floor.zones.each do |index, z|
+      next if index.to_i == 9 and @user.data['guildId'].to_i == 0
       if z[:requireFloor]
         next unless (@user.data['completedFloorIds'].include? z[:requireFloor].to_i)
       end
