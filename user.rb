@@ -381,4 +381,23 @@ class User
     login_url = "/api/user/login?#{uri.query}"
     return "#{login_url}&hash=#{encypt.getHash(login_url, '')}"
   end
+
+  def get_luckydraw_url
+    encypt = Checksum.new
+    post_data = {
+      :quantity => 1,
+      :uid => @data['uid'],
+      :session => @data['session'],
+      :language => @post_data[:language],
+      :platform => @post_data[:platform],
+      :version => @post_data[:version],
+      :timestamp => Time.now.to_i,
+      :timezone => @post_data[:timezone],
+      :nData => encypt.getNData
+    }
+    uri = Addressable::URI.new
+    uri.query_values = post_data
+    login_url = "/api/user/diamond/luckydraw?#{uri.query}"
+    return "#{login_url}&hash=#{encypt.getHash(login_url, '')}"
+  end
 end
