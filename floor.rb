@@ -15,7 +15,8 @@ class Floor
       '5' => {:name => '暗夜深淵', :requireFloor => 20},
       '6' => {:name => '以諾塔'},
       '7' => {:name => '古神遺跡', :requireFloor => 23},
-      '8' => {:name => '旅人的記憶', :requireFloor => 88}
+      '8' => {:name => '旅人的記憶', :requireFloor => 88},
+      '9' => {:name => '布蘭克洞窟'}
     }
     @zones.each do |index, z|
       #puts "zones %s %s" % [index,z]
@@ -163,7 +164,7 @@ class Floor
         if e['lootItem']
           loot = e['lootItem']
           prefix = "戰勵品：".bg_blue.yellow.bold
-          puts "\t#{prefix} lv%d %s" % [loot['card']['level'],user.monster.data[loot['card']['monsterId']][:monsterName]] if loot['type'] == 'monster'
+          puts "\t#{prefix} lv%d %s" % [loot['card']['level'],user.monster.data[loot['card']['monsterId'].to_s][:monsterName]] if loot['type'] == 'monster'
           puts "\t#{prefix} #{loot['amount']} 金" if loot['type'] == 'money'
         end
         #puts "enemy_hp:#{enemy_hp} enemy_attack:#{enemy_attack}"

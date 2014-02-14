@@ -74,12 +74,12 @@ class User
     @helpers = {}
     data.each_index do |index|
       person = data[index].split('|')
-      #puts person
       club = ""
       begin
         club = person[17].split('#')[6]
       rescue
       end
+
       person_data = {
         :uid => person[0],
         :name => person[1],
@@ -119,7 +119,7 @@ class User
     puts "戰勵品：".bg_blue.yellow.bold
     @loots.each do |l|
       if l['type'] == 'monster'
-        puts "%3d lv%2d %s" % [l['card']['cardId'],l['card']['level'],@monster.data[l['card']['monsterId']][:monsterName]]
+        puts "%3d lv%2d %s" % [l['card']['cardId'],l['card']['level'],@monster.data[l['card']['monsterId'].to_s][:monsterName]]
       else
         l['merged'] = true
       end
@@ -357,7 +357,7 @@ class User
   def print_helpers
     @helpers.each do |index, h|
       #puts "[#{index}] #{h[:uid]} #{h[:name]} #{h[:level]} #{h[:monster_name]}"
-      puts "[%3d] LV:%2d CD:%2d FP+%2s %s : %s %s" % [index,h[:monsterLevel],h[:coolDown],h[:friendPoint],h[:monster_name],(h[:club] == nil || h[:club] == '' ? "" : "【#{h[:club]}】").pink ,h[:name]]
+      puts "[%3d] LV:%2d CD:%2d %s : %s %s" % [index,h[:monsterLevel],h[:coolDown],h[:monster_name],"【#{h[:club]}】".yellow,h[:name]]
     end
   end
 
@@ -392,10 +392,10 @@ class User
     return TosUrl.new :path => "/api/user/login" ,:data => @post_data
   end
 
-  def add_friend_url(targetUid)
+  def get_luckydraw_url
     encypt = Checksum.new
     post_data = {
-      :targetUid => targetUid,
+      :quantity => 1,
       :uid => @data['uid'],
       :session => @data['session'],
       :language => @post_data[:language],
@@ -405,5 +405,9 @@ class User
       :timezone => @post_data[:timezone],
       :nData => encypt.getNData
     }
-    return TosUrl.new :path => "/api/user/request/send" ,:data => post_data  end
+    uri = Addressable::URI.new
+    uri.query_values = post_data
+    login_url = "/api/user/diamond/luckydraw?#{uri.query}"
+    return "#{login_url}&hash=#{encypt.getHash(login_url, '')}"
+  end
 end

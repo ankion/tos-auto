@@ -95,6 +95,7 @@ class Tos
   def choice_floor
     puts 'Zone list'
     @floor.zones.each do |index, z|
+      next if index.to_i == 9 and @user.data['guildId'].to_i == 0
       if z[:requireFloor]
         next unless (@user.data['completedFloorIds'].include? z[:requireFloor].to_i)
       end
@@ -138,7 +139,7 @@ class Tos
     return false if choice_stage == 'b'
     choice_stage = last_stage if last_stage and choice_stage == ''
 
-    puts "Floor list"
+    puts "Floor list#{@last_zone.to_i == 9 ? "(key:#{@user.data['items']['13']}/100)" : ""}"
     last_floor = nil
     floors = @floor.floors.select {|k| k[:stage] == choice_stage}
 
@@ -151,7 +152,7 @@ class Tos
       stamina = halfStamina ? (f[:stamina].to_i/2.0).round : f[:stamina]
       puts "[%3d]%s %2d %s" % [f[:id],((@user.data['completedFloorIds'].include? f[:id].to_i) ? 'v' : ' ').bold.green,stamina,f[:name]]
       last_floor = f[:id]
-      break unless (@user.data['completedFloorIds'].include? f[:id].to_i)
+      break unless (@user.data['completedFloorIds'].include? f[:id].to_i) or @last_zone.to_i == 9
     end
     prompt = 'Choice floor?(b:back,q:quit)'
     prompt += "[#{last_floor}]" if last_floor
