@@ -164,8 +164,12 @@ class Floor
         if e['lootItem']
           loot = e['lootItem']
           prefix = "戰勵品：".bg_blue.yellow.bold
-          puts "\t#{prefix} lv%d %s" % [loot['card']['level'],user.monster.data[loot['card']['monsterId'].to_s][:monsterName]] if loot['type'] == 'monster'
-          puts "\t#{prefix} #{loot['amount']} 金" if loot['type'] == 'money'
+          begin
+            puts "\t#{prefix} lv%d %s" % [loot['card']['level'],user.monster.data[loot['card']['monsterId'].to_s][:monsterName]] if loot['type'] == 'monster'
+            puts "\t#{prefix} #{loot['amount']} 金" if loot['type'] == 'money'
+          rescue
+            puts "\t#{loot}"
+          end
         end
         #puts "enemy_hp:#{enemy_hp} enemy_attack:#{enemy_attack}"
         loop do

@@ -119,7 +119,22 @@ class User
     puts "戰勵品：".bg_blue.yellow.bold
     @loots.each do |l|
       if l['type'] == 'monster'
-        puts "%3d lv%2d %s" % [l['card']['cardId'],l['card']['level'],@monster.data[l['card']['monsterId'].to_s][:monsterName]]
+        begin
+          puts "%3d lv%2d %s" % [l['card']['cardId'],l['card']['level'],@monster.data[l['card']['monsterId'].to_s][:monsterName]]
+        rescue
+          puts "l=#{l}"
+=begin 
+#debug block
+          card = l == nil || l.has_key?('card') == false ? {} : l['card']
+          puts "card=#{card}"
+          cardId = card.has_key?('cardId') ? card['cardId'] : 0
+          puts "cardId=#{cardId}"
+          monsterId = card.has_key?('monsterId') ? card['monsterId'] : 0
+          puts "monsterId=#{monsterId}"
+          puts "monster.data=#{@monster.data}"
+          puts "monster[#{monsterId}]=#{@monster.data[monsterId]}"
+=end
+        end
       else
         l['merged'] = true
       end
