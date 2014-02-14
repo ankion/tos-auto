@@ -118,7 +118,7 @@ class User
     puts "戰勵品：".bg_blue.yellow.bold
     @loots.each do |l|
       if l['type'] == 'monster'
-        puts "%3d lv%2d %s" % [l['card']['cardId'],l['card']['level'],@monster.data[l['card']['monsterId']][:monsterName]]
+        puts "%3d lv%2d %s" % [l['card']['cardId'],l['card']['level'],@monster.data[l['card']['monsterId'].to_s][:monsterName]]
       else
         l['merged'] = true
       end
