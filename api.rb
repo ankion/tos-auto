@@ -23,11 +23,17 @@ require "addressable/uri"
 require './setting'
 require "./checksum"
 
+
 ## override String #######################################
 class String
+  $sup_color = true #static
+  def sup_color(ok=true) 
+    $sup_color = ok == true
+    self
+  end
   def color(color,str=self)
     return str if Settings['no_color']
-    colors = {
+    colors = $sup_color == false ? {} : {
       'black'         => "\033[30m%s\033[0m",
       'red'           => "\033[31m%s\033[0m",  #紅
       'green'         => "\033[32m%s\033[0m",  #綠
@@ -50,7 +56,6 @@ class String
       'ul'            => "\033[4m%s\033[22m",  #底線
       'reverse_color' => "\033[7m%s\033[27m"   #反白
     }
-    #puts "colorStr(#{color} ,#{str}) : "
     str = colors[color.to_s] %str if colors[color.to_s]
     return str
   end
@@ -141,15 +146,8 @@ def show_wait_spinner(fps=10)
   }                # Use the block's return value as the method's
 end
 #############################################
-=begin
-\e[D #left
-\e[B
-\e[D #left
-\e[D #left
-
-=end
-####
 #outputs color table to console, regular and bold modes
+=begin
 def colortable
   names = %w(black red green yellow blue pink cyan gray default)
   fgcodes = (30..39).to_a - [38]
@@ -165,6 +163,7 @@ def colortable
       fg,44,s,fg,44,s,  fg,45,s,fg,45,s,  fg,46,s,fg,46,s,  fg,47,s,fg,47,s,  fg,49,s,fg,49,s ]
   }
 end
+=end
 ##########################################
 def attribute_color(str,attribute=-1,prefix=false)
   typeList = ["★","㊌","㊋","㊍","☼","☀","06","07","08","09","10","人","獸","妖","龍","神","進","強","魔","19","20"]
@@ -216,6 +215,14 @@ def attribute_color(str,attribute=-1,prefix=false)
   	str = str.bold
   end
   return str
+end
+## check is null or empty("") string #####################
+def is_empty(ob)
+  return ob == nil || ob.to_s.size == 0
+end
+## check is null or blank("  ") string #####################
+def is_blank(ob)
+  return is_empty(ob) || ob.to_s.rstrip.size == 0
 end
 ## each time to string refresh timestamp & hash ###########
 class TosUrl
