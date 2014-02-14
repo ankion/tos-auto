@@ -88,6 +88,7 @@ class User
         :monsterId => person[8],
         :monsterLevel => person[10],
         :skillLevel => person[11],
+        :friendPoint => person[13].to_i || 0,
         :coolDown => "#{Integer(@monster.data[person[8]][:normalSkill][:maxCoolDown]) - Integer(person[11]) + 1}",
         :club => club ,
         :monster_name => @monster.data[person[8]][:monsterName],
@@ -118,7 +119,22 @@ class User
     puts "戰勵品：".bg_blue.yellow.bold
     @loots.each do |l|
       if l['type'] == 'monster'
-        puts "%3d lv%2d %s" % [l['card']['cardId'],l['card']['level'],@monster.data[l['card']['monsterId'].to_s][:monsterName]]
+        begin
+          puts "%3d lv%2d %s" % [l['card']['cardId'],l['card']['level'],@monster.data[l['card']['monsterId'].to_s][:monsterName]]
+        rescue
+          puts "l=#{l}"
+=begin 
+#debug block
+          card = l == nil || l.has_key?('card') == false ? {} : l['card']
+          puts "card=#{card}"
+          cardId = card.has_key?('cardId') ? card['cardId'] : 0
+          puts "cardId=#{cardId}"
+          monsterId = card.has_key?('monsterId') ? card['monsterId'] : 0
+          puts "monsterId=#{monsterId}"
+          puts "monster.data=#{@monster.data}"
+          puts "monster[#{monsterId}]=#{@monster.data[monsterId]}"
+=end
+        end
       else
         l['merged'] = true
       end
@@ -152,11 +168,14 @@ class User
       :timezone => @post_data[:timezone],
       :nData => encypt.getNData
     }
+=begin
     uri = Addressable::URI.new
     uri.query_values = post_data
     url = "/api/card/sell?#{uri.query}"
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
+=end
+    return TosUrl.new :path => "/api/card/sell" ,:data => post_data
   end
 
   def print_cards
@@ -258,11 +277,14 @@ class User
       :bookmarks => @bookmarks.join(','),
       :nData => encypt.getNData
     }
+=begin
     uri = Addressable::URI.new
     uri.query_values = post_data
     url = "/api/card/merge?#{uri.query}"
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
+=end
+    return TosUrl.new :path => "/api/card/merge" ,:data => post_data
   end
 
   def auto_get_team
@@ -350,7 +372,7 @@ class User
   def print_helpers
     @helpers.each do |index, h|
       #puts "[#{index}] #{h[:uid]} #{h[:name]} #{h[:level]} #{h[:monster_name]}"
-      puts "[%3d] LV:%2d CD:%2d %s : %s %s" % [index,h[:monsterLevel],h[:coolDown],h[:monster_name],"【#{h[:club]}】".yellow,h[:name]]
+      puts "[%3d] LV:%2d CD:%2d FP+%2s %s : %s %s" % [index,h[:monsterLevel],h[:coolDown],h[:friendPoint],h[:monster_name],is_empty(h[:club]) ? "" : "【#{h[:club]}】".yellow,h[:name]]
     end
   end
 
@@ -373,6 +395,7 @@ class User
   end
 
   def get_login_url
+=begin
     encypt = Checksum.new
     @post_data[:timestamp] = Time.now.to_i
     @post_data[:nData] = encypt.getNData
@@ -380,6 +403,8 @@ class User
     uri.query_values = @post_data
     login_url = "/api/user/login?#{uri.query}"
     return "#{login_url}&hash=#{encypt.getHash(login_url, '')}"
+=end
+    return TosUrl.new :path => "/api/user/login" ,:data => @post_data
   end
 
   def get_luckydraw_url

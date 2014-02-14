@@ -575,7 +575,7 @@ class Monster
       mob[:shadowType] = monster[42]
       mob[:groupId] = monster[44]
       ## color name ###############################################
-      monsterNameDesc = mob[:monsterName]
+      monsterNameDesc = mob[:monsterName] == nil ? mob[:monsterId] : mob[:monsterName]
       monsterNameDesc = attribute_color(monsterNameDesc,mob[:attribute])
       starDesc = mob[:star].to_s+attribute_color(" ",0,true);
       monsterNameDesc = attribute_color("",mob[:type]+10,true) + starDesc + monsterNameDesc

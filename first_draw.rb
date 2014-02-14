@@ -5,6 +5,9 @@ require "./monster"
 require 'json'
 require 'logger'
 require 'mechanize'
+
+@tos_url = Settings['tos_url']
+
 def general_uniquekey(deviceKey)
   seed_string = "#{deviceKey}#{Time.now.to_i}#{rand(999999999)}"
   Digest::MD5.hexdigest(seed_string)
@@ -123,6 +126,9 @@ count.times do
   print 'user/register > '
   url = "/api/user/register?type=device&name=king&attribute=1&uniqueKey=#{uniqueKey}&deviceKey=#{deviceKey}&sysInfo=Android+OS+2.3.7+%2f+API-10+(GWK74%2f20130501)%7cARMv7+VFPv3+NEON%7c1%7c477%7c35%7cPowerVR+SGX+530%7cFALSE%7cOpenGL+ES-CM+1.1%7cNone%7cFALSE%7c2048%7c3.27%7c%7c%7c40%3afc%3a89%3a02%3ab3%3a55&session=&language=zh_TW&platform=android&version=4.54&timestamp=#{Time.now.to_i}&timezone=8&nData=#{encypt.getNData}"
   res_json = send_tos(web,encypt,url)
+  parsed = @monster.data.has_key?("1") && @monster.data["1"].has_key?(:monsterId)
+  @monster.parse_normal_skill(res_json['data']['normalSkills']) if !parsed
+  @monster.parse_data(res_json['data']['monsters']) if !parsed
   uData = res_json['user']
   uid = res_json['user']['uid']
   session = res_json['user']['session']
@@ -212,7 +218,7 @@ count.times do
   mIdFmt = "%03d" %mId
   mName = first_card[:monsterName]
   puts "<#{monster['level']}> #{mIdFmt} #{mName}"
-  hehagame = "http://tos.hehagame.com/Category_show.php?ide=#{mIdFmt}"
+  hehagame = "http://tos.hehagame.com/Category_show.php?ide=#{mIdFmt}".blue.bold.ul
   puts hehagame
 ###############################################
   if is_best_card(mId)

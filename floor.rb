@@ -164,8 +164,12 @@ class Floor
         if e['lootItem']
           loot = e['lootItem']
           prefix = "戰勵品：".bg_blue.yellow.bold
-          puts "\t#{prefix} lv%d %s" % [loot['card']['level'],user.monster.data[loot['card']['monsterId'].to_s][:monsterName]] if loot['type'] == 'monster'
-          puts "\t#{prefix} #{loot['amount']} 金" if loot['type'] == 'money'
+          begin
+            puts "\t#{prefix} lv%d %s" % [loot['card']['level'],user.monster.data[loot['card']['monsterId'].to_s][:monsterName]] if loot['type'] == 'monster'
+            puts "\t#{prefix} #{loot['amount']} 金" if loot['type'] == 'money'
+          rescue
+            puts "\t#{loot}"
+          end
         end
         #puts "enemy_hp:#{enemy_hp} enemy_attack:#{enemy_attack}"
         loop do
@@ -294,11 +298,14 @@ class Floor
       :timezone => user.post_data[:timezone],
       :nData => encypt.getNData
     }
+=begin    
     uri = Addressable::URI.new
     uri.query_values = post_data
     url = "/api/floor/helpers?#{uri.query}"
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
+=end
+    return TosUrl.new :path => "/api/floor/helpers" ,:data => post_data
   end
 
   def get_enter_url(user)
@@ -317,11 +324,14 @@ class Floor
       :timezone => user.post_data[:timezone],
       :nData => encypt.getNData
     }
+=begin
     uri = Addressable::URI.new
     uri.query_values = post_data
     url = "/api/floor/enter?#{uri.query}"
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
+=end
+    return TosUrl.new :path => "/api/floor/enter" ,:data => post_data
   end
 
   def get_fail_url(user)
@@ -339,11 +349,14 @@ class Floor
       :timezone => user.post_data[:timezone],
       :nData => encypt.getNData
     }
+=begin    
     uri = Addressable::URI.new
     uri.query_values = post_data
     url = "/api/floor/fail?#{uri.query}"
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
+=end
+    return TosUrl.new :path => "api/floor/fail" ,:data => post_data    
   end
 
   def get_complete_url(user)
@@ -356,7 +369,7 @@ class Floor
     @finish_data[:timestamp] = Time.now.to_i
     @finish_data[:timezone] = user.post_data[:timezone]
     @finish_data[:nData] = encypt.getNData
-
+#
     acs_uri = Addressable::URI.new
     acs_uri.query_values = @acs_data
     acs_url = acs_uri.query

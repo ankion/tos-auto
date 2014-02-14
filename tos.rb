@@ -11,10 +11,13 @@ require './floor'
 require './setting'
 
 class Tos
+  attr_accessor :user
   def initialize
     file_name = "logfile.log.#{ARGV[0] ? ARGV[0] : 'defaults'}"
     File.delete(file_name) if File.exists? file_name
     @logger = Logger.new(file_name)
+    color_ui = Settings['color_ui']
+    print "".sup_color(color_ui == true).ul
     @tos_url = Settings['tos_url']
     @user = User.new
     #@monster = Monster.new
@@ -32,28 +35,29 @@ class Tos
   end
 
   def page_post(url)
-    res_json = nil
-
-    loop do
-      full_url = "#{@tos_url}#{url}"
-      page = @web.post(full_url, {
-        "frags" => Digest::MD5.hexdigest(Digest::MD5.hexdigest(full_url)),
-        "attempt" => "1"
-      })
-      @logger.info page.body
-      res_json = JSON.parse(page.body)
-      break if res_json['respond'].to_i == 1
-      puts res_json.inspect
-      if res_json['respond'].to_i == 6 or res_json['respond'].to_i == 3
-        #puts res_json['respond']['errorMessage']
-        wait_time = res_json['wait'] ? res_json['wait'].to_i : 600
-        print_wait(wait_time)
-        next
+    show_wait_spinner{
+      res_json = nil
+      loop do
+        full_url = "#{@tos_url}#{url}"
+        page = @web.post(full_url, {
+          "frags" => Digest::MD5.hexdigest(Digest::MD5.hexdigest(full_url)),
+          "attempt" => "1"
+        })
+        @logger.info page.body
+        res_json = JSON.parse(page.body)
+        break if res_json['respond'].to_i == 1
+        puts res_json.inspect
+        if res_json['respond'].to_i == 6 or res_json['respond'].to_i == 3
+          #puts res_json['respond']['errorMessage']
+          wait_time = res_json['wait'] ? res_json['wait'].to_i : 600
+          print_wait(wait_time,false)
+          next
+        end
+        exit
       end
-      exit
-    end
 
-    res_json
+      res_json      
+    }
   end
 
   def login

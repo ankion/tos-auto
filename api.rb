@@ -1,11 +1,39 @@
 # -*- encoding : utf-8 -*-
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'~~~     ~~~`@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@@@@@@@@@@'                     `@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@@@@@@@'                           `@@@@@@@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@@@@@'                               `@@@@@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@@@'                                   `@@@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@@'                                     `@@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@'                      n,               `@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@'                    _/ | _               `@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@'                   /'  `'/               `@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@a                 <~    .'                a@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@                 .'    |                 @@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@a              _/      |                a@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@@a           _/      `.`.              a@@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@@@a     ____/ '   \__ | |______       a@@@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@@@@@a__/___/      /__\ \ \     \___.a@@@@@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@@@@@/  (___.'\_______)\_|_|        \@@@@@@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@@@@|\________                       ~~~~~\@@@@@@@@@@@@@@@@@@
+#~~~\@@@@@@@@@@@@@@||       |\___________________________/|@/~~~~~~~~~~~\@@@
+
+require "addressable/uri"
 require './setting'
+require "./checksum"
+
 
 ## override String #######################################
 class String
+  $sup_color = false #static
+  def sup_color(ok=true) 
+    $sup_color = ok == true
+    self
+  end
   def color(color,str=self)
     return str if Settings['no_color']
-    colors = {
+    colors = $sup_color == false ? {} : {
       'black'         => "\033[30m%s\033[0m",
       'red'           => "\033[31m%s\033[0m",  #紅
       'green'         => "\033[32m%s\033[0m",  #綠
@@ -24,9 +52,10 @@ class String
       'bg_cyan'       => "\033[46m%s\033[0m",
       'bg_gray'       => "\033[47m%s\033[0m",
       'bold'          => "\033[1m%s\033[22m",  #高亮
+      'underline'     => "\033[4m%s\033[0m" ,  #底線
+      'ul'            => "\033[4m%s\033[0m" ,  #底線
       'reverse_color' => "\033[7m%s\033[27m"   #反白
     }
-    #puts "colorStr(#{color} ,#{str}) : "
     str = colors[color.to_s] %str if colors[color.to_s]
     return str
   end
@@ -48,7 +77,10 @@ class String
   def bg_cyan;        color(__method__) end
   def bg_gray;        color(__method__) end
   def bold;           color(__method__) end
+  def underline;      color(__method__) end
+  def ul;             color(__method__) end
   def reverse_color;  color(__method__) end
+  def beep(str=self); "%s\07" %str;     end
 end
 
 ## Set Time Zone #######################################
@@ -60,16 +92,16 @@ rescue
   ENV['TZ'] = prev_tz
 end
 #########################################
-def print_wait(times)
+def print_wait(times,animation=true)
   chars = %w{ | / - \\ }
   count = times
   str_length = "#{count}".size
   (times * 10).times do
     print "#{Integer(count)}".rjust(str_length).bold.blue
-    print chars[0].to_s.bold.yellow
+    print chars[0].to_s.bold.yellow if animation
     sleep 0.1
     count-=0.1
-    print "\b" * (str_length+1)
+    print "\b" * (str_length+(animation ? 1 : 0))
     chars.push chars.shift
   end
 end
@@ -97,7 +129,7 @@ show_wait_spinner{
   sleep rand(4)+2
 }
 =end   ##################
-def show_wait_spinner(fps=10)
+def show_wait_spinner(fps=10,beep=false)
   chars = %w[| / - \\]
   delay = 1.0/fps
   iter = 0
@@ -107,7 +139,8 @@ def show_wait_spinner(fps=10)
       sleep delay
       print "\b"
     end
-    print "\07"    # beep
+    print " \b"
+    print "".beep if beep
   end
   yield.tap{       # After yielding to the block, save the return value
     iter = false   # Tell the thread to exit, cleaning up after itself…
@@ -115,15 +148,8 @@ def show_wait_spinner(fps=10)
   }                # Use the block's return value as the method's
 end
 #############################################
-=begin
-\e[D #left
-\e[B
-\e[D #left
-\e[D #left
-
-=end
-####
 #outputs color table to console, regular and bold modes
+=begin
 def colortable
   names = %w(black red green yellow blue pink cyan gray default)
   fgcodes = (30..39).to_a - [38]
@@ -139,6 +165,7 @@ def colortable
       fg,44,s,fg,44,s,  fg,45,s,fg,45,s,  fg,46,s,fg,46,s,  fg,47,s,fg,47,s,  fg,49,s,fg,49,s ]
   }
 end
+=end
 ##########################################
 def attribute_color(str,attribute=-1,prefix=false)
   typeList = ["★","㊌","㊋","㊍","☼","☀","06","07","08","09","10","人","獸","妖","龍","神","進","強","魔","19","20"]
@@ -190,4 +217,37 @@ def attribute_color(str,attribute=-1,prefix=false)
   	str = str.bold
   end
   return str
+end
+## check is null or empty("") string #####################
+def is_empty(ob)
+  return ob == nil || ob.to_s.size == 0
+end
+## check is null or blank("  ") string #####################
+def is_blank(ob)
+  return is_empty(ob) || ob.to_s.rstrip.size == 0
+end
+## each time to string refresh timestamp & hash ###########
+class TosUrl
+  attr_reader :path, :data, :acs_path, :acs_data
+  def initialize args
+    args.each do |k,v|
+      #puts "k:#{k} ,v:#{v}"
+      instance_variable_set("@#{k}", v) unless v.nil?
+    end
+  end
+  def to_s
+    encypt = Checksum.new
+    uri = Addressable::URI.new
+    tmp = @data
+    tmp[:timestamp]=Time.now.to_i
+    tmp[:nData]=encypt.getNData
+    uri.query_values = data
+    rt = "#{@path}?#{uri.query}"
+    rt = "#{rt}&hash=#{encypt.getHash(rt, '')}"
+    #puts "TosUrl.to_s - #{rt}"
+    return rt
+  end
+  def inspect
+    to_s
+  end
 end
