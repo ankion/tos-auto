@@ -372,7 +372,7 @@ class User
   def print_helpers
     @helpers.each do |index, h|
       #puts "[#{index}] #{h[:uid]} #{h[:name]} #{h[:level]} #{h[:monster_name]}"
-      puts "[%3d] LV:%2d CD:%2d %s : %s %s" % [index,h[:monsterLevel],h[:coolDown],h[:monster_name],is_empty(h[:club]) ? "" : "【#{h[:club]}】".yellow,h[:name]]
+      puts "[%3d] LV:%2d CD:%2d FP+%2s %s : %s %s" % [index,h[:monsterLevel],h[:coolDown],h[:friendPoint],h[:monster_name],is_empty(h[:club]) ? "" : "【#{h[:club]}】".yellow,h[:name]]
     end
   end
 
