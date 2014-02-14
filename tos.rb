@@ -17,8 +17,7 @@ class Tos
     File.delete(file_name) if File.exists? file_name
     @logger = Logger.new(file_name)
     color_ui = Settings['color_ui']
-    "".sup_color(color_ui == true)
-    puts "-======= WELCOME =======-".gold
+    print "".sup_color(color_ui == true).ul
     @tos_url = Settings['tos_url']
     @user = User.new
     #@monster = Monster.new

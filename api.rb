@@ -52,8 +52,8 @@ class String
       'bg_cyan'       => "\033[46m%s\033[0m",
       'bg_gray'       => "\033[47m%s\033[0m",
       'bold'          => "\033[1m%s\033[22m",  #高亮
-      'underline'     => "\033[4m%s\033[22m",  #底線
-      'ul'            => "\033[4m%s\033[22m",  #底線
+      'underline'     => "\033[4m%s\033[0m" ,  #底線
+      'ul'            => "\033[4m%s\033[0m" ,  #底線
       'reverse_color' => "\033[7m%s\033[27m"   #反白
     }
     str = colors[color.to_s] %str if colors[color.to_s]
