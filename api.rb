@@ -26,7 +26,7 @@ require "./checksum"
 
 ## override String #######################################
 class String
-  $sup_color = true #static
+  $sup_color = false #static
   def sup_color(ok=true) 
     $sup_color = ok == true
     self
@@ -80,6 +80,7 @@ class String
   def underline;      color(__method__) end
   def ul;             color(__method__) end
   def reverse_color;  color(__method__) end
+  def beep(str=self); "%s\07" %str;     end
 end
 
 ## Set Time Zone #######################################
@@ -91,16 +92,16 @@ rescue
   ENV['TZ'] = prev_tz
 end
 #########################################
-def print_wait(times)
+def print_wait(times,animation=true)
   chars = %w{ | / - \\ }
   count = times
   str_length = "#{count}".size
   (times * 10).times do
     print "#{Integer(count)}".rjust(str_length).bold.blue
-    print chars[0].to_s.bold.yellow
+    print chars[0].to_s.bold.yellow if animation
     sleep 0.1
     count-=0.1
-    print "\b" * (str_length+1)
+    print "\b" * (str_length+(animation ? 1 : 0))
     chars.push chars.shift
   end
 end
@@ -128,7 +129,7 @@ show_wait_spinner{
   sleep rand(4)+2
 }
 =end   ##################
-def show_wait_spinner(fps=10)
+def show_wait_spinner(fps=10,beep=false)
   chars = %w[| / - \\]
   delay = 1.0/fps
   iter = 0
@@ -138,7 +139,8 @@ def show_wait_spinner(fps=10)
       sleep delay
       print "\b"
     end
-    print " \b\07"    # beep
+    print " \b"
+    print "".beep if beep
   end
   yield.tap{       # After yielding to the block, save the return value
     iter = false   # Tell the thread to exit, cleaning up after itself…
