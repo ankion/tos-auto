@@ -210,13 +210,13 @@ class Floor
           end
         end
       end
-      if @acs_data[:a] > @max_round
-        puts 'This wave is fail.'
-        @acs_data[:h] += 1
-        @acs_data[:k] = 0
-        @wave_fail = true
-        break
-      end
+      #if @acs_data[:a] > @max_round
+        #puts 'This wave is fail.'
+        #@acs_data[:h] += 1
+        #@acs_data[:k] = 0
+        #@wave_fail = true
+        #break
+      #end
       @acs_data[:b] += 1
       enemyAttackCountPerWave_array << enemyAttackCountPerWave
       enemyDamageTakenPerWave_array << enemyDamageTakenPerWave
@@ -298,7 +298,7 @@ class Floor
       :timezone => user.post_data[:timezone],
       :nData => encypt.getNData
     }
-=begin    
+=begin
     uri = Addressable::URI.new
     uri.query_values = post_data
     url = "/api/floor/helpers?#{uri.query}"
@@ -349,14 +349,14 @@ class Floor
       :timezone => user.post_data[:timezone],
       :nData => encypt.getNData
     }
-=begin    
+=begin
     uri = Addressable::URI.new
     uri.query_values = post_data
     url = "/api/floor/fail?#{uri.query}"
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
 =end
-    return TosUrl.new :path => "api/floor/fail" ,:data => post_data    
+    return TosUrl.new :path => "api/floor/fail" ,:data => post_data
   end
 
   def get_complete_url(user)
