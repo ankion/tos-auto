@@ -4,7 +4,7 @@ require './api'
 require './checksum'
 
 class Floor
-  attr_accessor :zones, :stages, :floors, :wave_team, :wave_team_data, :wave_floor, :wave_helper, :waves_data, :wave_fail, :finish_data, :acs_data, :stage_bonus, :bonus_type
+  attr_accessor :zones, :stages, :floors, :wave_team, :wave_team_data, :wave_floor, :wave_helper, :waves_data, :wave_fail, :finish_data, :acs_data, :ext_acs_data, :stage_bonus, :bonus_type
 
   def initialize
     @zones = {
@@ -44,7 +44,8 @@ class Floor
     @wave_fail = false
     @finish_data = nil
     @acs_data = nil
-    @max_round = 100
+    @ext_acs_data = nil
+    #@max_round = 100
     @stage_bonus = nil
   end
 
@@ -116,6 +117,7 @@ class Floor
       # BootLoader.upTime
       :x => 100 + rand(500)
     }
+    @ext_acs_data = {}
   end
 
   def set_complete(user)
@@ -153,7 +155,7 @@ class Floor
       maxPlayerAttackPerWave = 0
 
       @waves_data['waves'][index]['enemies'].each do |e|
-        break if @acs_data[:a] > @max_round
+        #break if @acs_data[:a] > @max_round
         monster = user.monster.data[e['monsterId'].to_s]
         enemy_hp = monster[:minEnemyHP].to_i + (monster[:incEnemyHP].to_i * e['level'].to_i)
         enemy_attack = monster[:minEnemyAttack].to_i + (monster[:incEnemyAttack].to_i * e['level'].to_i)
@@ -173,7 +175,7 @@ class Floor
         end
         #puts "enemy_hp:#{enemy_hp} enemy_attack:#{enemy_attack}"
         loop do
-          break if @acs_data[:a] > @max_round
+          #break if @acs_data[:a] > @max_round
           @acs_data[:a] += 1
           wave_recover = team_hp - wave_hp
           wave_hp = team_hp
@@ -235,13 +237,38 @@ class Floor
       minPlayerHPPerWave_array << 0
       maxPlayerAttackPerWave_array << 0
     end
-    @acs_data[:y] = enemyAttackCountPerWave_array.join('|')
-    @acs_data[:z] = enemyDamageTakenPerWave_array.join('|')
-    @acs_data[:ab] = maxDamageTakenPerWave_array.join('|')
-    @acs_data[:ac] = maxComboPerWave_array.join('|')
-    @acs_data[:ad] = minPlayerHPPerWave_array.join('|')
-    @acs_data[:ae] = maxPlayerAttackPerWave_array.join('|')
-    @acs_data[:am] = maxAttackPerRoundDuringBossWave
+    @ext_acs_data['y'] = enemyAttackCountPerWave_array.join(',')
+    @ext_acs_data['z'] = enemyDamageTakenPerWave_array.join(',')
+    @ext_acs_data['aa'] = user.get_team_data(@wave_team_data, @wave_helper)
+    @ext_acs_data['ab'] = maxDamageTakenPerWave_array.join(',')
+    @ext_acs_data['ac'] = maxComboPerWave_array.join(',')
+    @ext_acs_data['ad'] = minPlayerHPPerWave_array.join(',')
+    @ext_acs_data['ae'] = maxPlayerAttackPerWave_array.join(',')
+    @ext_acs_data['af'] = user.get_team_monster_data(@wave_team_data, @wave_helper)
+    @ext_acs_data['ag'] = 'null'
+    @ext_acs_data['ah'] = 'null'
+    @ext_acs_data['ai'] = 'null'
+    @ext_acs_data['aj'] = 'null'
+    @ext_acs_data['ak'] = 0
+    @ext_acs_data['al'] = 0
+    @ext_acs_data['am'] = maxAttackPerRoundDuringBossWave
+    temp_acs_data = @acs_data
+    temp_acs_data[:y] = enemyAttackCountPerWave_array.join(',')
+    temp_acs_data[:z] = enemyDamageTakenPerWave_array.join(',')
+    temp_acs_data[:aa] = user.get_team_data(@wave_team_data, @wave_helper)
+    temp_acs_data[:ab] = maxDamageTakenPerWave_array.join(',')
+    temp_acs_data[:ac] = maxComboPerWave_array.join(',')
+    temp_acs_data[:ad] = minPlayerHPPerWave_array.join(',')
+    temp_acs_data[:ae] = maxPlayerAttackPerWave_array.join(',')
+    temp_acs_data[:af] = user.get_team_monster_data(@wave_team_data, @wave_helper)
+    temp_acs_data[:ag] = 'null'
+    temp_acs_data[:ah] = 'null'
+    temp_acs_data[:ai] = 'null'
+    temp_acs_data[:aj] = 'null'
+    temp_acs_data[:ak] = 0
+    temp_acs_data[:al] = 0
+    temp_acs_data[:am] = maxAttackPerRoundDuringBossWave
+    @ext_acs_data[:acs] = temp_acs_data.to_json
     floor_data = @floors.select {|k| k[:id] == @wave_floor}
     #puts "floor:#{floor_data.first[:name]}"
     #if floor_data.first[:name].include? '地獄級'

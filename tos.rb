@@ -39,10 +39,15 @@ class Tos
       res_json = nil
       loop do
         full_url = "#{@tos_url}#{url}"
-        page = @web.post(full_url, {
+        post_data = {
           "frags" => Digest::MD5.hexdigest(Digest::MD5.hexdigest(full_url)),
           "attempt" => "1"
-        })
+        }
+        if full_url.include? 'complete'
+          post_data = post_data.merge(@floor.ext_acs_data)
+          #puts post_data.inspect
+        end
+        page = @web.post(full_url, post_data)
         @logger.info page.body
         res_json = JSON.parse(page.body)
         break if res_json['respond'].to_i == 1
@@ -68,10 +73,10 @@ class Tos
     puts '取得資料'
     @user.data = res_json['user']
     @user.bookmarks = res_json['user']['bookmarks']
-    @user.parse_card_data(res_json['cards'])
     @floor.parse_floor_data(res_json['data'])
     @user.monster.parse_normal_skill(res_json['data']['normalSkills'])
     @user.monster.parse_data(res_json['data']['monsters'])
+    @user.parse_card_data(res_json['cards'])
     @floor.stage_bonus = res_json['data']['stageBonus']
     puts '======================================'
     @user.print_user_sc

@@ -80,11 +80,17 @@ class User
       rescue
       end
 
+      monster = @monster.data[person[8].to_s]
+      hp = ((monster[:maxCardHP].to_i - monster[:minCardHP].to_i) * (person[10].to_f / monster[:maxLevel].to_f) + monster[:minCardHP].to_i).to_i
+      attack = ((monster[:maxCardAttack].to_i - monster[:minCardAttack].to_i) * (person[10].to_f / monster[:maxLevel].to_f) + monster[:minCardAttack].to_i).to_i
+      recover = ((monster[:maxCardRecover].to_i - monster[:minCardRecover].to_i) * (person[10].to_f / monster[:maxLevel].to_f) + monster[:minCardRecover].to_i).to_i
+
       person_data = {
         :uid => person[0],
         :name => person[1],
         :loginTime => person[2],
         :level => person[3],
+        :cardId => person[7],
         :monsterId => person[8],
         :monsterLevel => person[10],
         :skillLevel => person[11],
@@ -92,7 +98,12 @@ class User
         :coolDown => "#{Integer(@monster.data[person[8]][:normalSkill][:maxCoolDown]) - Integer(person[11]) + 1}",
         :club => club ,
         :monster_name => @monster.data[person[8]][:monsterName],
-        :clientHelperCard => "#{person[7..11].join('|')}|0|0"
+        :clientHelperCard => "#{person[7..11].join('|')}|0|0",
+        :attack => attack,
+        :recover => recover,
+        :HP => hp,
+        :leaderSkill => monster[:leaderSkill],
+        :normalSkill => monster[:normalSkill][:skillId]
       }
       @helpers[index+1] = person_data
     end
@@ -123,7 +134,7 @@ class User
           puts "%3d lv%2d %s" % [l['card']['cardId'],l['card']['level'],@monster.data[l['card']['monsterId'].to_s][:monsterName]]
         rescue
           puts "l=#{l}"
-=begin 
+=begin
 #debug block
           card = l == nil || l.has_key?('card') == false ? {} : l['card']
           puts "card=#{card}"
@@ -318,6 +329,26 @@ class User
     end
   end
 
+  def get_team_data(teams, helper)
+    data_string = ''
+    teams.each do |t|
+      card = @cards[t]
+      next unless card
+      data_string += "#{card[:cardId]}|#{card[:monsterId]}|#{card[:attack]}|#{card[:recover]}|#{card[:HP]}|#{card[:skillLevel]},"
+    end
+    data_string += "#{helper[:cardId]}|#{helper[:monsterId]}|#{helper[:attack]}|#{helper[:recover]}|#{helper[:HP]}|#{helper[:skillLevel]}"
+  end
+
+  def get_team_monster_data(teams, helper)
+    data_string = ''
+    teams.each do |t|
+      card = @cards[t]
+      next unless card
+      data_string += "#{card[:attack]}|#{card[:recover]}|#{card[:leaderSkill]}|#{card[:normalSkill]}|#{card[:coolDown]}|#{card[:skillLevel]},"
+    end
+    data_string += "#{helper[:attack]}|#{helper[:recover]}|#{helper[:leaderSkill]}|#{helper[:normalSkill]}|#{helper[:coolDown]}|#{helper[:skillLevel]}"
+  end
+
   def get_team_hp(teams, helper = nil)
     total_hp = 0
     teams.each do |t|
@@ -380,13 +411,23 @@ class User
     @cards = {}
     data.each do |d|
       card_data = d.split('|')
+      monster = @monster.data[card_data[1].to_s]
+      hp = ((monster[:maxCardHP].to_i - monster[:minCardHP].to_i) * (card_data[3].to_f / monster[:maxLevel].to_f) + monster[:minCardHP].to_i).to_i
+      attack = ((monster[:maxCardAttack].to_i - monster[:minCardAttack].to_i) * (card_data[3].to_f / monster[:maxLevel].to_f) + monster[:minCardAttack].to_i).to_i
+      recover = ((monster[:maxCardRecover].to_i - monster[:minCardRecover].to_i) * (card_data[3].to_f / monster[:maxLevel].to_f) + monster[:minCardRecover].to_i).to_i
       card = {
         :cardId => card_data[0],
         :monsterId => card_data[1],
         :exp => card_data[2],
         :level => card_data[3],
         :skillLevel => card_data[4],
-        :create_at => card_data[5]
+        :create_at => card_data[5],
+        :attack => attack,
+        :recover => recover,
+        :HP => hp,
+        :leaderSkill => monster[:leaderSkill],
+        :normalSkill => monster[:normalSkill][:skillId],
+        :coolDown => "#{Integer(monster[:normalSkill][:maxCoolDown]) - Integer(card_data[4]) + 1}"
       }
       #puts card.inspect
       @cards[card_data[0]] = card
