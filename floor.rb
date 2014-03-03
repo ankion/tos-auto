@@ -4,19 +4,19 @@ require './api'
 require './checksum'
 
 class Floor
-  attr_accessor :zones, :stages, :floors, :wave_team, :wave_team_data, :wave_floor, :wave_helper, :waves_data, :wave_fail, :finish_data, :acs_data, :ext_acs_data, :stage_bonus, :bonus_type
+  attr_accessor :zones, :stages, :floors, :wave_team, :wave_team_data, :wave_zone, :wave_stage, :wave_floor, :wave_helper, :waves_data, :wave_fail, :finish_data, :acs_data, :ext_acs_data, :stage_bonus, :bonus_type
 
   def initialize
     @zones = {
-      '1' => {:name => '寒霜冰川', :requireFloor => 8},
-      '2' => {:name => '熾熱荒土', :requireFloor => 11},
-      '3' => {:name => '神木森林', :requireFloor => 14},
-      '4' => {:name => '聖光之城', :requireFloor => 17},
-      '5' => {:name => '暗夜深淵', :requireFloor => 20},
-      '6' => {:name => '以諾塔'},
-      '7' => {:name => '古神遺跡', :requireFloor => 23},
-      '8' => {:name => '旅人的記憶', :requireFloor => 88},
-      '9' => {:name => '布蘭克洞窟'}
+      '1' => {:name => '寒霜冰川', :requireFloor => 8, :scene => 'WATER'},
+      '2' => {:name => '熾熱荒土', :requireFloor => 11, :scene => 'FIRE'},
+      '3' => {:name => '神木森林', :requireFloor => 14, :scene => 'EARTH'},
+      '4' => {:name => '聖光之城', :requireFloor => 17, :scene => 'LIGHT'},
+      '5' => {:name => '暗夜深淵', :requireFloor => 20, :scene => 'DARK'},
+      '6' => {:name => '以諾塔', :scene => 'TOWER'},
+      '7' => {:name => '古神遺跡', :requireFloor => 23, :scene => 'SPECIAL'},
+      '8' => {:name => '旅人的記憶', :requireFloor => 88, :scene => 'STORY'},
+      '9' => {:name => '布蘭克洞窟', :scene => 'SPECIAL'}
     }
     @zones.each do |index, z|
       #puts "zones %s %s" % [index,z]
@@ -33,12 +33,14 @@ class Floor
       7 => 'ALERT'
     }
     @one_time_floors = [222, 488]
-    @one_time_stages = [63, 150, 132, 178]
+    @one_time_stages = [63, 150, 132, 178, 195]
     @stages = []
     @floors = []
     @waves_data = nil
     @wave_team = nil
     @wave_team_data = nil
+    @wave_zone = nil
+    @wave_stage = nil
     @wave_floor = nil
     @wave_helper = nil
     @wave_fail = false
@@ -136,6 +138,10 @@ class Floor
     minPlayerHPPerWave_array = []
     maxPlayerAttackPerWave_array = []
     maxAttackPerRoundDuringBossWave = 0
+    totalDamageToEnemy = 0
+    minDamageToEnemy = 0
+    maxDamageToEnemy = 0
+    totalDamageCountToEnemy = 0
     baseCombo = 8
     maxCombo = rand(6) + 1
     puts "Monster list"
@@ -185,6 +191,16 @@ class Floor
           #puts "recover:#{wave_recover} hp:#{wave_hp} combo:#{wave_combo} attack:#{wave_attack}"
           enemy_damage = wave_attack - enemy_defense
           enemy_damage = 1 if enemy_damage < 1
+          totalDamageToEnemy += enemy_damage.to_i
+          totalDamageCountToEnemy += 1
+          if minDamageToEnemy == 0
+            minDamageToEnemy = enemy_damage.to_i
+            maxDamageToEnemy = enemy_damage.to_i
+          else
+            minDamageToEnemy = enemy_damage.to_i if minDamageToEnemy > enemy_damage
+            maxDamageToEnemy = enemy_damage.to_i if maxDamageToEnemy < enemy_damage
+          end
+
           @finish_data[:maxCombo] = wave_combo if @finish_data[:maxCombo] < wave_combo
           maxComboPerWave = wave_combo if maxComboPerWave < wave_combo
           @finish_data[:maxAttack] = enemy_damage.to_i if @finish_data[:maxAttack] < enemy_damage
@@ -269,6 +285,70 @@ class Floor
     temp_acs_data[:al] = 0
     temp_acs_data[:am] = maxAttackPerRoundDuringBossWave
     @ext_acs_data[:acs] = temp_acs_data.to_json
+    gamePlayData = {
+      "stage" => {
+        "stageType" => "NORMAL",
+        "stageID" => @wave_stage,
+        "stageZone" => @zones[@wave_zone.to_s][:scene]
+      },
+      "floor" => {
+        "staminaCost" => (@floors.select {|f| f[:id].to_i == @wave_floor.to_i}).first[:stamina]
+      },
+      "user" => {
+        "staminaBeforeBattle" => user.data['currentStamina'].to_i - (@floors.select {|f| f[:id].to_i == @wave_floor.to_i}).first[:stamina].to_i,
+        "staminaAfterBattle" => user.data['currentStamina']
+      },
+      "team" => {
+        "maxHP" => @acs_data[:k],
+        "maxRecover" => @acs_data[:u],
+        "endHP" => @acs_data[:l],
+        "teamSize" => user.get_team_size(@wave_team_data),
+        "teamList" => user.get_team_list(@wave_team_data),
+        "helperUid" => @wave_helper[:uid],
+        "totalDamageByEnemy" => @acs_data[:r],
+        "totalDamageCountByEnemy" => @acs_data[:i],
+        "minDamageByEnemy" => @acs_data[:o],
+        "maxDamageByEnemy" => @acs_data[:p],
+        "totalDamageToEnemy" => totalDamageToEnemy,
+        "totalDamageCountToEnemy" => totalDamageCountToEnemy,
+        "minDamageToEnemy" => minDamageToEnemy,
+        "maxDamageToEnemy" => maxDamageToEnemy,
+        "maxAttackPerRoundDuringBossWave" => maxAttackPerRoundDuringBossWave
+      }
+    }
+    @ext_acs_data[:gamePlayData] = gamePlayData.to_json
+    sysinfo = Settings['sysInfo'].split('|')
+    systemInfo = {
+      "appVersion" => Settings['tos_version'],
+      "deviceModel" => "Motorola MB525",
+      "deviceType" => "Handheld",
+      "deviceUniqueIdentifier" => Settings['deviceKey'],
+      "operatingSystem" => sysinfo[0],
+      "systemVersion" => "2.3.7",
+      "processorType" => sysinfo[1],
+      "processorCount" => sysinfo[2],
+      "systemMemorySize" => sysinfo[3],
+      "graphicsMemorySize" => sysinfo[4],
+      "graphicsDeviceName" => sysinfo[5],
+      "graphicsDeviceVendor" => "Imagination Technologies",
+      "graphicsDeviceVersion" => sysinfo[7],
+      "emua" => "FALSE",
+      "emub" => "FALSE",
+      "npotSupport" => sysinfo[8],
+      "supportsAccelerometer" => "True",
+      "supportsGyroscope" => "False",
+      "supportsLocationService" => "True",
+      "supportsVibration" => "True",
+      "maxTextureSize" => sysinfo[10],
+      "screenWidth" => "480",
+      "screenHeight" => "854",
+      "screenDPI" => "264.7876",
+      "IDFA" => "",
+      "IDFV" => "",
+      "MAC" => sysinfo[14],
+      "networkType" => "WIFI"
+    }
+    @ext_acs_data[:systemInfo] = systemInfo.to_json
     floor_data = @floors.select {|k| k[:id] == @wave_floor}
     #puts "floor:#{floor_data.first[:name]}"
     #if floor_data.first[:name].include? '地獄級'
@@ -308,7 +388,7 @@ class Floor
     end
     data['floorList'].each do |f|
       floor = f.split('|')
-      @floors << {:id => floor[0], :stage => floor[1], :name => floor[7], :stamina => floor[4]}
+      @floors << {:id => floor[0], :stage => floor[1], :name => floor[7], :stamina => floor[4], :wave => floor[5]}
     end
   end
 
@@ -332,7 +412,7 @@ class Floor
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
 =end
-    return TosUrl.new :path => "/api/floor/helpers" ,:data => post_data
+    return TosUrl.new :path => "/api/floor/helpers" ,:data => post_data, :user_data => user.data
   end
 
   def get_enter_url(user)
@@ -358,7 +438,7 @@ class Floor
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
 =end
-    return TosUrl.new :path => "/api/floor/enter" ,:data => post_data
+    return TosUrl.new :path => "/api/floor/enter" ,:data => post_data, :user_data => user.data
   end
 
   def get_fail_url(user)
@@ -383,7 +463,7 @@ class Floor
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
 =end
-    return TosUrl.new :path => "api/floor/fail" ,:data => post_data
+    return TosUrl.new :path => "api/floor/fail" ,:data => post_data, :user_data => user.data
   end
 
   def get_complete_url(user)
@@ -397,16 +477,19 @@ class Floor
     @finish_data[:timezone] = user.post_data[:timezone]
     @finish_data[:nData] = encypt.getNData
 #
-    acs_uri = Addressable::URI.new
-    acs_uri.query_values = @acs_data
-    acs_url = acs_uri.query
-    acs_url = "#{acs_url}&acsh=#{encypt.getHash(acs_url, '')}"
+    #acs_uri = Addressable::URI.new
+    #acs_uri.query_values = @acs_data
+    #acs_url = acs_uri.query
+    #acs_url = "#{acs_url}&acsh=#{encypt.getHash(acs_url, '')}"
     #puts acs_url
 
-    uri = Addressable::URI.new
-    uri.query_values = @finish_data
-    url = "/api/floor/complete?#{uri.query}&#{acs_url}"
+    #uri = Addressable::URI.new
+    #uri.query_values = @finish_data
+    #url = "/api/floor/complete?#{uri.query}&#{acs_url}"
     #puts url
-    return "#{url}&hash=#{encypt.getHash(url, '')}"
+    post_data = @finish_data.merge(@acs_data)
+    post_data[:acsh] = encypt.getHash('acsh', @ext_acs_data[:acs], '')
+    #return "#{url}&hash=#{encypt.getHash(url, '')}"
+    return TosUrl.new :path => "/api/floor/complete" ,:data => post_data, :user_data => user.data
   end
 end

@@ -507,7 +507,16 @@ class Monster
       '498' => {:monsterName => "福德神寵 ‧ 笑犬"},
       '499' => {:monsterName => "怒顏守護犬"},
       '500' => {:monsterName => "懲惡神衛 ‧ 怒犬"},
-      '501' => {:monsterName => "韶光仙獸 ‧ 年"}
+      '501' => {:monsterName => "韶光仙獸 ‧ 年"},
+      '502' => {:monsterName => "UNKNOWN"},
+      '503' => {:monsterName => "UNKNOWN"},
+      '504' => {:monsterName => "UNKNOWN"},
+      '505' => {:monsterName => "UNKNOWN"},
+      '506' => {:monsterName => "不滅戰意‧費雷"},
+      '507' => {:monsterName => "烈火懲責‧提爾"},
+      '508' => {:monsterName => "唁魂之喚‧費蕾雅"},
+      '509' => {:monsterName => "轟雷鳴動‧索爾"},
+      '510' => {:monsterName => "不赦眚惡‧洛基"}
     }
     @normal_skill = nil
   end

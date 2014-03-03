@@ -53,7 +53,7 @@ class User
       #:session => 'c51b955d9535eb1722e898e683be51e3',
       :language => 'zh_TW',
       :platform => Settings['platform'],
-      :version => '4.54',
+      :version => Settings['tos_version'],
       :timestamp => '',
       :timezone => '8',
       :nData => ''
@@ -186,7 +186,7 @@ class User
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
 =end
-    return TosUrl.new :path => "/api/card/sell" ,:data => post_data
+    return TosUrl.new :path => "/api/card/sell" ,:data => post_data, :user_data => @data
   end
 
   def print_cards
@@ -295,7 +295,7 @@ class User
     #puts url
     return "#{url}&hash=#{encypt.getHash(url, '')}"
 =end
-    return TosUrl.new :path => "/api/card/merge" ,:data => post_data
+    return TosUrl.new :path => "/api/card/merge" ,:data => post_data, :user_data => @data
   end
 
   def auto_get_team
@@ -347,6 +347,33 @@ class User
       data_string += "#{card[:attack]}|#{card[:recover]}|#{card[:leaderSkill]}|#{card[:normalSkill]}|#{card[:coolDown]}|#{card[:skillLevel]},"
     end
     data_string += "#{helper[:attack]}|#{helper[:recover]}|#{helper[:leaderSkill]}|#{helper[:normalSkill]}|#{helper[:coolDown]}|#{helper[:skillLevel]}"
+  end
+
+  def get_team_size(teams)
+    total_size = 0
+    teams.each do |t|
+      card = @cards[t]
+      next unless card
+      monster = @monster.data[card[:monsterId]]
+      total_size += monster[:size].to_i
+    end
+    total_size
+  end
+
+  def get_team_list(teams)
+    team_list = []
+    teams.each do |t|
+      card = @cards[t]
+      next unless card
+      monster = @monster.data[card[:monsterId]]
+      team = {
+        "monsterId" => card[:monsterId],
+        "monsterLevel" => card[:level],
+        "attackCount" => 0
+      }
+      team_list << team
+    end
+    team_list
   end
 
   def get_team_hp(teams, helper = nil)
@@ -445,7 +472,7 @@ class User
     login_url = "/api/user/login?#{uri.query}"
     return "#{login_url}&hash=#{encypt.getHash(login_url, '')}"
 =end
-    return TosUrl.new :path => "/api/user/login" ,:data => @post_data
+    return TosUrl.new :path => "/api/user/login" ,:data => @post_data, :user_data => @data
   end
 
   def get_luckydraw_url

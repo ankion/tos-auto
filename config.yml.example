@@ -1,12 +1,14 @@
 # config.yml
 defaults: &defaults
-  color_ui: false
+  tos_version: "4.62"
   tos_url: ""
   tos_key: ""
+  tos_secret:
   uniqueKey: ""
   deviceKey: ""
   sysInfo: ""
   platform: ""
+  color_ui: false
   auto_sell: false
   sell_cards: []
   auto_merge: false

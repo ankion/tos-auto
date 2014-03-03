@@ -27,7 +27,7 @@ require "./checksum"
 ## override String #######################################
 class String
   $sup_color = false #static
-  def sup_color(ok=true) 
+  def sup_color(ok=true)
     $sup_color = ok == true
     self
   end
@@ -241,9 +241,17 @@ class TosUrl
     tmp = @data
     tmp[:timestamp]=Time.now.to_i
     tmp[:nData]=encypt.getNData
-    uri.query_values = data
+    salt = ''
+    if @path.include? 'user/login'
+      tmp[:olv] = eval(Base64.decode64(encypt.secret['get_olv1']))
+      salt = tmp[:deviceKey]
+    else
+      tmp[:olv] = eval(Base64.decode64(encypt.secret['get_olv2']))
+      salt = "#{tmp[:uid]}#{tmp[:session]}"
+    end
+    uri.query_values = tmp
     rt = "#{@path}?#{uri.query}"
-    rt = "#{rt}&hash=#{encypt.getHash(rt, '')}"
+    rt = "#{rt}&hash=#{encypt.getHash('base', rt, salt)}"
     #puts "TosUrl.to_s - #{rt}"
     return rt
   end
