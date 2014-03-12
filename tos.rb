@@ -74,9 +74,12 @@ class Tos
     puts '登入遊戲中.....'
     res_json = page_post(@user.get_login_url)
     puts '登入成功'
-    match_string = '你已累積登入 <color=#FFFF80FF>(\d*)</color> 天'
-    login_days = /#{match_string}/.match(res_json['data']['dailyMessage'])[1].to_i
-    puts "你已累積登入 #{login_days} 天"
+    begin
+      match_string = '你已累積登入 <color=#FFFF80FF>(\d*)</color> 天'
+      login_days = /#{match_string}/.match(res_json['data']['dailyMessage'])[1].to_i
+      puts "你已累積登入 #{login_days} 天"
+    rescue
+    end
     puts '取得資料'
     @user.data = res_json['user']
     @user.bookmarks = res_json['user']['bookmarks']
