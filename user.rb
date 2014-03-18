@@ -2,197 +2,177 @@
 require "addressable/uri"
 require "./api"
 require "./checksum"
-require "./monster"
+require "./floor"
 require "./setting"
-require "./exp"
+require "./http"
+require "./gamedata"
 
 class User
-  attr_accessor :monster, :data, :cards, :post_data, :helpers, :loots, :bookmarks
+  attr_accessor :data, :current_team, :cards
 
-  def initialize
-    @monster = Monster.new
-    @exp = Exp.new
-    @stage_require_floor = {
-      '8' => 23, # 一封
-      '9' => 28,
-      '10' => 33,
-      '11' => 38,
-      '12' => 43,
-      '13' => 48,
-      '14' => 53, # 二封
-      '15' => 58,
-      '16' => 63,
-      '17' => 68,
-      '18' => 73,
-      '19' => 78,
-      '20' => 83, # 三封
-      '21' => 88,
-      '22' => 93,
-      '23' => 98,
-      '24' => 103,
-      '25' => 108,
-      '26' => 113, # 四封
-      '27' => 118,
-      '28' => 123,
-      '29' => 128,
-      '30' => 133,
-      '31' => 138,
-      '32' => 143, # 五封
-      '87' => 148,
-      '88' => 281,
-      '89' => 286,
-      '90' => 291,
-      '91' => 296,
-      '92' => 301 # 六封
+  def initialize(uniqueKey, deviceKey)
+    @uniqueKey = uniqueKey
+    @deviceKey = deviceKey
+    @data = {
+      "uid" => nil,
+      "session" => nil,
+      "name" => nil,
+      "level" => nil,
+      "exp" => nil,
+      "team0Array" => nil,
+      "team1Array" => nil,
+      "team2Array" => nil,
+      "team3Array" => nil,
+      "team4Array" => nil,
+      "inventoryCapacity" => nil,
+      "totalCards" => nil,
+      "currentStamina" => nil,
+      "maxStamina" => nil,
+      "friendPoint" => nil,
+      "coin" => nil,
+      "diamond" => nil,
+      "bookmarks" => nil,
+      "guildId" => nil,
+      "completedFloorIds" => nil,
+      "completedStageIds" => nil,
     }
-    @post_data = {
-      :type => 'facebook',
-      :uniqueKey => Settings['uniqueKey'],
-      :deviceKey => Settings['deviceKey'],
-      :sysInfo => Settings['sysInfo'],
-      #:session => 'c51b955d9535eb1722e898e683be51e3',
-      :language => 'zh_TW',
-      :platform => Settings['platform'],
-      :version => Settings['tos_version'],
-      :timestamp => '',
-      :timezone => '8',
-      :nData => ''
-    }
-    @data = nil
+    @game_data = GameData.new
+    @current_floor = nil
+    @current_team = nil
     @cards = {}
-    @helpers = nil
-    @loots = nil
-    @bookmarks = nil
   end
 
-  def stage_can_enter?(stage)
-    return true unless @stage_require_floor[stage]
-    @data['completedFloorIds'].include? @stage_require_floor[stage]
+  def login
+    get_data = {
+      'type' => 'device',
+      'uniqueKey' => @uniqueKey,
+      'deviceKey' => @deviceKey,
+      'sysInfo' => Settings['sysInfo'],
+    }
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/user/login", get_data)
+    self.update_data(res_json)
+    @game_data.update_monster(res_json)
+    self.update_cards(res_json)
+    @game_data.update_floors(res_json, @data['guildId'].to_i != 0)
   end
 
-  def parse_helpers_data(data)
-    @helpers = {}
-    data.each_index do |index|
-      person = data[index].split('|')
-      club = ""
-      begin
-        club = person[17].split('#')[6]
-      rescue
-      end
+  def floors
+    @game_data.floors
+  end
 
-      monster = @monster.data[person[8].to_s]
-      hp = ((monster[:maxCardHP].to_i - monster[:minCardHP].to_i) * (person[10].to_f / monster[:maxLevel].to_f) + monster[:minCardHP].to_i).to_i
-      attack = ((monster[:maxCardAttack].to_i - monster[:minCardAttack].to_i) * (person[10].to_f / monster[:maxLevel].to_f) + monster[:minCardAttack].to_i).to_i
-      recover = ((monster[:maxCardRecover].to_i - monster[:minCardRecover].to_i) * (person[10].to_f / monster[:maxLevel].to_f) + monster[:minCardRecover].to_i).to_i
+  def floor(floor_data)
+    @current_floor = Floor.new(@game_data, self, floor_data, @current_team)
+  end
 
-      person_data = {
-        :uid => person[0],
-        :name => person[1],
-        :loginTime => person[2],
-        :level => person[3],
-        :cardId => person[7],
-        :monsterId => person[8],
-        :monsterLevel => person[10],
-        :skillLevel => person[11],
-        :friendPoint => person[13].to_i || 0,
-        :coolDown => "#{Integer(@monster.data[person[8]][:normalSkill][:maxCoolDown]) - Integer(person[11]) + 1}",
-        :club => club ,
-        :monster_name => @monster.data[person[8]][:monsterName],
-        :clientHelperCard => "#{person[7..11].join('|')}|0|0",
-        :attack => attack,
-        :recover => recover,
-        :HP => hp,
-        :leaderSkill => monster[:leaderSkill],
-        :normalSkill => monster[:normalSkill][:skillId]
+  def update_cards(res_json)
+    return unless res_json['cards']
+    @cards = {}
+    res_json['cards'].each do |val|
+      card_data = val.split('|')
+      @cards[card_data[0].to_i] = {
+        'cardId' => card_data[0],
+        'monsterId' => card_data[1],
+        'exp' => card_data[2],
+        'level' => card_data[3],
+        'skillLevel' => card_data[4],
+        'create_at' => card_data[5],
+        'monster' => @game_data.monster(card_data[1], card_data[3], card_data[4]),
+        'bookmark' => @data['bookmarks'].include?(card_data[0]) | @data['teamArray'].include?(card_data[0])
       }
-      @helpers[index+1] = person_data
     end
+  end
+
+  def update_data(res_json)
+    return unless res_json['user']
+    @data.each do |key, val|
+      @data[key] = res_json['user'][key] if res_json['user'][key]
+    end
+    @data['next_exp'] = @game_data.next_exp @data['level']
+    @data['teamArray'] = []
+    @data['teamArray'] += @data['team0Array'].split(',')
+    @data['teamArray'] += @data['team1Array'].split(',')
+    @data['teamArray'] += @data['team2Array'].split(',')
+    @data['teamArray'] += @data['team3Array'].split(',')
+    @data['teamArray'] += @data['team4Array'].split(',')
+    @data['teamArray'].delete 0
+  end
+
+  def teams
+    {
+      1 => self.team(1),
+      2 => self.team(2),
+      3 => self.team(3),
+      4 => self.team(4),
+      5 => self.team(5)
+    }
+  end
+
+  def team(index)
+    team_data = @data["team#{index - 1}Array"].split(',')
+    team = []
+    team_data.each do |val|
+      next if val.to_i == 0
+      card = @cards[val.to_i]
+      team << card
+    end
+    team
+  end
+
+  def select_team(index)
+    @current_team = {
+      'teamId' => index - 1,
+      'teamId_s' => "team#{index - 1}Array"
+    }
+    @current_team['teams'] = self.team(index)
+    @current_team['hp'] = 0
+    @current_team['attack'] = 0
+    @current_team['recover'] = 0
+    @current_team['teams'].each do |member|
+      @current_team['hp'] += member['monster']['hp'].to_i
+      @current_team['attack'] += member['monster']['attack'].to_i
+      @current_team['recover'] += member['monster']['recover'].to_i
+    end
+
+  end
+
+  def first_team
+    (0..4).each do |t|
+      next if @data["team#{t}Array"] == '0,0,0,0,0'
+      return (t + 1).to_s
+    end
+    return nil
   end
 
   def cards_full?
     @data['totalCards'].to_i >= (@data['inventoryCapacity'].to_i + 10)
   end
 
-  def print_user_sc
-    puts "session：#{@data['session']}"
-    puts "uid：#{@data['uid']}"
-    puts "名稱：#{@data['name']}"
-    puts "等級：#{@data['level']}"
-    next_exp = @exp.data[@data['level'].to_i + 1]
-    puts "經驗值：#{@data['exp']}/#{next_exp} (#{next_exp - @data['exp'].to_i})"
-    puts "金錢：#{@data['coin']}"
-    puts "魔石：#{@data['diamond']}"
-    puts "體力：#{@data['currentStamina']}/#{@data['maxStamina']}"
-    puts "背包：#{@data['totalCards']}/#{@data['inventoryCapacity']}"
-  end
-
-  def print_loots
-    puts "戰勵品：".bg_blue.yellow.bold
-    @loots.each do |l|
-      if l['type'] == 'monster'
-        begin
-          puts "%3d lv%2d %s" % [l['card']['cardId'],l['card']['level'],@monster.data[l['card']['monsterId'].to_s][:monsterName]]
-        rescue
-          puts "l=#{l}"
-=begin
-#debug block
-          card = l == nil || l.has_key?('card') == false ? {} : l['card']
-          puts "card=#{card}"
-          cardId = card.has_key?('cardId') ? card['cardId'] : 0
-          puts "cardId=#{cardId}"
-          monsterId = card.has_key?('monsterId') ? card['monsterId'] : 0
-          puts "monsterId=#{monsterId}"
-          puts "monster.data=#{@monster.data}"
-          puts "monster[#{monsterId}]=#{@monster.data[monsterId]}"
-=end
-        end
-      else
-        l['merged'] = true
-      end
+  def sell_cards(cards)
+    card_count = cards.count
+    sell_time = 1
+    first = 1
+    if card_count <= 10
+      last = card_count
+    else
+      last = 10
+      sell_time = card_count / 10
+      sell_time += 1 if card_count % 10
     end
-  end
-
-  def get_sell_card(target_cards)
-    targetCardIds = []
-    @loots.each do |l|
-      next unless l['card']
-      next if l['selled']
-      next if l['merged']
-      next unless target_cards.include? l['card']['monsterId']
-      targetCardIds << l['card']['cardId']
-      l['selled'] = true
-      break if targetCardIds.length == 10
+    res_json = nil
+    merge_time.times do
+      get_data = {
+        'targetCardIds' => cards[(first-1)..(last-1)].join(',')
+      }
+      toshttp = TosHttp.new(@data)
+      res_json = toshttp.post("/api/card/sell", get_data)
+      first = last + 1
+      last = last + 10
+      last = card_count if last > card_count
     end
-    return targetCardIds
-  end
-
-  def get_sell_url(targetCardIds)
-    encypt = Checksum.new
-    post_data = {
-      :targetCardIds => targetCardIds.join(','),
-      :uid => @data['uid'],
-      :session => @data['session'],
-      :language => @post_data[:language],
-      :platform => @post_data[:platform],
-      :version => @post_data[:version],
-      :timestamp => Time.now.to_i,
-      :timezone => @post_data[:timezone],
-      :nData => encypt.getNData
-    }
-=begin
-    uri = Addressable::URI.new
-    uri.query_values = post_data
-    url = "/api/card/sell?#{uri.query}"
-    #puts url
-    return "#{url}&hash=#{encypt.getHash(url, '')}"
-=end
-    return TosUrl.new :path => "/api/card/sell" ,:data => post_data, :user_data => @data
-  end
-
-  def print_cards
-    @cards.each do |card|
-      puts card[1].inspect
-    end
+    self.update_data(res_json)
+    self.update_cards(res_json)
+    res_json['data']
   end
 
   def get_source_card(source, merge_card)
@@ -273,224 +253,108 @@ class User
     return targetCardIds
   end
 
-  def get_merge_url(sourceCardId, targetCardIds)
-    encypt = Checksum.new
-    post_data = {
-      :sourceCardId => sourceCardId,
-      :targetCardIds => targetCardIds.join(','),
-      :uid => @data['uid'],
-      :session => @data['session'],
-      :language => @post_data[:language],
-      :platform => @post_data[:platform],
-      :version => @post_data[:version],
-      :timestamp => Time.now.to_i,
-      :timezone => @post_data[:timezone],
-      :bookmarks => @bookmarks.join(','),
-      :nData => encypt.getNData
-    }
-=begin
-    uri = Addressable::URI.new
-    uri.query_values = post_data
-    url = "/api/card/merge?#{uri.query}"
-    #puts url
-    return "#{url}&hash=#{encypt.getHash(url, '')}"
-=end
-    return TosUrl.new :path => "/api/card/merge" ,:data => post_data, :user_data => @data
-  end
-
-  def auto_get_team
-    (0..4).each do |t|
-      next if @data["team#{t}Array"] == '0,0,0,0,0'
-      return (t + 1).to_s
+  def merge_card(sourceCardId, targetCardIds)
+    card_count = targetCardIds.count
+    merge_time = 1
+    first = 1
+    if card_count <= 5
+      last = card_count
+    else
+      last = 5
+      merge_time = card_count / 5
+      merge_time += 1 if card_count % 5
     end
-    return nil
-  end
-
-  def print_teams(helper = nil)
-    (0..4).each do |t|
-      total_hp = 0
-      total_attack = 0
-      total_recover = 0
-      #puts @user.data["team#{t}Array"]
-      next if @data["team#{t}Array"] == '0,0,0,0,0'
-      team = @data["team#{t}Array"].split(',')
-      print "隊伍#{t + 1}：\n"
-      team.each do |m|
-        card = @cards[m]
-        next unless card
-        monster = @monster.data[card[:monsterId]]
-        print "\t"
-        print "lv%2d %s" % [card[:level],monster[:monsterName]]
-        print "\n"
-        #puts @monster.data[card[:monsterId]].inspect
-      end
-      #print "\n"
-      #puts "total hp:#{get_team_hp(team, helper)} total attack:#{get_team_attack(team, helper)} total recover:#{get_team_recover(team, helper)}"
-    end
-  end
-
-  def get_team_data(teams, helper)
-    data_string = ''
-    teams.each do |t|
-      card = @cards[t]
-      next unless card
-      data_string += "#{card[:cardId]}|#{card[:monsterId]}|#{card[:attack]}|#{card[:recover]}|#{card[:HP]}|#{card[:skillLevel]},"
-    end
-    data_string += "#{helper[:cardId]}|#{helper[:monsterId]}|#{helper[:attack]}|#{helper[:recover]}|#{helper[:HP]}|#{helper[:skillLevel]}"
-  end
-
-  def get_team_monster_data(teams, helper)
-    data_string = ''
-    teams.each do |t|
-      card = @cards[t]
-      next unless card
-      data_string += "#{card[:attack]}|#{card[:recover]}|#{card[:leaderSkill]}|#{card[:normalSkill]}|#{card[:coolDown]}|#{card[:skillLevel]},"
-    end
-    data_string += "#{helper[:attack]}|#{helper[:recover]}|#{helper[:leaderSkill]}|#{helper[:normalSkill]}|#{helper[:coolDown]}|#{helper[:skillLevel]}"
-  end
-
-  def get_team_size(teams)
-    total_size = 0
-    teams.each do |t|
-      card = @cards[t]
-      next unless card
-      monster = @monster.data[card[:monsterId]]
-      total_size += monster[:size].to_i
-    end
-    total_size
-  end
-
-  def get_team_list(teams)
-    team_list = []
-    teams.each do |t|
-      card = @cards[t]
-      next unless card
-      monster = @monster.data[card[:monsterId]]
-      team = {
-        "monsterId" => card[:monsterId],
-        "monsterLevel" => card[:level],
-        "attackCount" => 0
+    res_json = nil
+    merge_time.times do
+      get_data = {
+        'sourceCardId' => sourceCardId,
+        'targetCardIds' => targetCardIds[(first-1)..(last-1)].join(',')
       }
-      team_list << team
+      toshttp = TosHttp.new(@data)
+      res_json = toshttp.post("/api/card/merge", get_data)
+      first = last + 1
+      last = last + 5
+      last = card_count if last > card_count
     end
-    team_list
+    self.update_data(res_json)
+    self.update_cards(res_json)
+    card = res_json['data']['card']
+    card['monster'] = @game_data.monster(card['monsterId'], card['level'], card['skillLevel'])
+    card
   end
 
-  def get_team_hp(teams, helper = nil)
-    total_hp = 0
-    teams.each do |t|
-      card = @cards[t]
-      next unless card
-      monster = @monster.data[card[:monsterId]]
-      hp = ((monster[:maxCardHP].to_i - monster[:minCardHP].to_i) * (card[:level].to_f / monster[:maxLevel].to_f) + monster[:minCardHP].to_i).to_i
-      total_hp += hp
-    end
-    if helper
-      monster = @monster.data[helper[:monsterId]]
-      hp = ((monster[:maxCardHP].to_i - monster[:minCardHP].to_i) * (helper[:monsterLevel].to_f / monster[:maxLevel].to_f) + monster[:minCardHP].to_i).to_i
-      total_hp += hp
-    end
-    return total_hp
+  def find_cards_by_monster(id)
+    @cards.select {|k,v| v['monsterId'].to_i == id.to_i and not v['bookmark']}
   end
 
-  def get_team_attack(teams, helper = nil)
-    total_attack = 0
-    teams.each do |t|
-      card = @cards[t]
-      next unless card
-      monster = @monster.data[card[:monsterId]]
-      attack = ((monster[:maxCardAttack].to_i - monster[:minCardAttack].to_i) * (card[:level].to_f / monster[:maxLevel].to_f) + monster[:minCardAttack].to_i).to_i
-      total_attack += attack
+  def get_evolve_card(cardId)
+    monster = @cards[cardId.to_i]['monster']
+    evolutions = []
+    (0..4).each do |index|
+      evolution = @game_data.monster(monster["evolutionRule#{index}"].to_i)
+      evolutions << evolution if evolution
     end
-    if helper
-      monster = @monster.data[helper[:monsterId]]
-      attack = ((monster[:maxCardAttack].to_i - monster[:minCardAttack].to_i) * (helper[:monsterLevel].to_f / monster[:maxLevel].to_f) + monster[:minCardAttack].to_i).to_i
-      total_attack += attack
-    end
-    return total_attack
+    evolutions
   end
 
-  def get_team_recover(teams, helper = nil)
-    total_recover = 0
-    teams.each do |t|
-      card = @cards[t]
-      next unless card
-      monster = @monster.data[card[:monsterId]]
-      recover = ((monster[:maxCardRecover].to_i - monster[:minCardRecover].to_i) * (card[:level].to_f / monster[:maxLevel].to_f) + monster[:minCardRecover].to_i).to_i
-      total_recover += recover
-    end
-    if helper
-      monster = @monster.data[helper[:monsterId]]
-      recover = ((monster[:maxCardRecover].to_i - monster[:minCardRecover].to_i) * (helper[:level].to_f / monster[:maxLevel].to_f) + monster[:minCardRecover].to_i).to_i
-      total_recover += recover
-    end
-    return total_recover
-  end
-
-  def print_helpers
-    @helpers.each do |index, h|
-      #puts "[#{index}] #{h[:uid]} #{h[:name]} #{h[:level]} #{h[:monster_name]}"
-      puts "[%3d] LV:%2d CD:%2d FP+%2s %s : %s %s" % [index,h[:monsterLevel],h[:coolDown],h[:friendPoint],h[:monster_name],is_empty(h[:club]) ? "" : "【#{h[:club]}】".yellow,h[:name]]
-    end
-  end
-
-  def parse_card_data(data)
-    @cards = {}
-    data.each do |d|
-      card_data = d.split('|')
-      monster = @monster.data[card_data[1].to_s]
-      hp = ((monster[:maxCardHP].to_i - monster[:minCardHP].to_i) * (card_data[3].to_f / monster[:maxLevel].to_f) + monster[:minCardHP].to_i).to_i
-      attack = ((monster[:maxCardAttack].to_i - monster[:minCardAttack].to_i) * (card_data[3].to_f / monster[:maxLevel].to_f) + monster[:minCardAttack].to_i).to_i
-      recover = ((monster[:maxCardRecover].to_i - monster[:minCardRecover].to_i) * (card_data[3].to_f / monster[:maxLevel].to_f) + monster[:minCardRecover].to_i).to_i
-      card = {
-        :cardId => card_data[0],
-        :monsterId => card_data[1],
-        :exp => card_data[2],
-        :level => card_data[3],
-        :skillLevel => card_data[4],
-        :create_at => card_data[5],
-        :attack => attack,
-        :recover => recover,
-        :HP => hp,
-        :leaderSkill => monster[:leaderSkill],
-        :normalSkill => monster[:normalSkill][:skillId],
-        :coolDown => "#{Integer(monster[:normalSkill][:maxCoolDown]) - Integer(card_data[4]) + 1}"
-      }
-      #puts card.inspect
-      @cards[card_data[0]] = card
-    end
-    @cards = Hash[@cards.sort_by {|k,v| v[:create_at] }]
-  end
-
-  def get_login_url
-=begin
-    encypt = Checksum.new
-    @post_data[:timestamp] = Time.now.to_i
-    @post_data[:nData] = encypt.getNData
-    uri = Addressable::URI.new
-    uri.query_values = @post_data
-    login_url = "/api/user/login?#{uri.query}"
-    return "#{login_url}&hash=#{encypt.getHash(login_url, '')}"
-=end
-    return TosUrl.new :path => "/api/user/login" ,:data => @post_data, :user_data => @data
-  end
-
-  def get_luckydraw_url
-    encypt = Checksum.new
-    post_data = {
-      :quantity => 1,
-      :uid => @data['uid'],
-      :session => @data['session'],
-      :language => @post_data[:language],
-      :platform => @post_data[:platform],
-      :version => @post_data[:version],
-      :timestamp => Time.now.to_i,
-      :timezone => @post_data[:timezone],
-      :nData => encypt.getNData
+  def evolve_card(sourceCardId, targetCardIds)
+    get_data = {
+      'sourceCardId' => sourceCardId,
+      'targetCardIds' => targetCardIds.join(',')
     }
-    uri = Addressable::URI.new
-    uri.query_values = post_data
-    login_url = "/api/user/diamond/luckydraw?#{uri.query}"
-    return "#{login_url}&hash=#{encypt.getHash(login_url, '')}"
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/card/evolve", get_data)
+    self.update_data(res_json)
+    self.update_cards(res_json)
+    card = res_json['data']['card']
+    card['monster'] = @game_data.monster(card['monsterId'], card['level'], card['skillLevel'])
+    card
+  end
+
+  def frienddraw(quantity = 1)
+    get_data = {
+      'quantity' => quantity
+    }
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/user/friendpoint/luckydraw", get_data)
+    self.update_data(res_json)
+    self.update_cards(res_json)
+    cards_data = res_json['data']['cardIds']
+    cards = []
+    cards_data.each do |cardId|
+      cards << @cards[cardId.to_i]
+    end
+    cards
+  end
+
+  def luckydraw
+    get_data = {
+      'quantity' => 1
+    }
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/user/diamond/luckydraw", get_data)
+    self.update_data(res_json)
+    self.update_cards(res_json)
+    card = res_json['data']['card']
+    card['monster'] = @game_data.monster(card['monsterId'], card['level'], card['skillLevel'])
+    card
+  end
+
+  def extend_box
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/user/diamond/extend_box")
+    self.update_data(res_json)
+  end
+
+  def extend_friend
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/user/diamond/extend_friend")
+    self.update_data(res_json)
+  end
+
+  def restore_stamina
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/user/diamond/restore_stamina")
+    self.update_data(res_json)
   end
 end
