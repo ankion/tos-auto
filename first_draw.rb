@@ -53,10 +53,12 @@ def is_good_card(card_id)
 end
 #########################################
 count = 500
-nowTStr = "accountlist.log"
+nowTStr = "card/accountlist.log"
+dir = File.dirname(nowTStr)
+FileUtils.mkdir_p(dir) unless File.directory?(dir)
 @logger = Logger.new(nowTStr)
-@good_logger = Logger.new("good_account.log")
-@best_logger = Logger.new("best_account.log")
+@good_logger = Logger.new("card/good_account.log")
+@best_logger = Logger.new("card/best_account.log")
 index = 0
 count.times do
   deviceKey = general_devicekey
@@ -132,9 +134,6 @@ count.times do
   user.set_helper(card['cardId'])
   puts ""
 ###############################################
-  puts "deviceKey:#{deviceKey}"
-  puts "uniqueKey:#{uniqueKey}"
-  puts "uid:#{user.data['uid']}"
   puts "<#{monster['level']}> #{monster['monsterId']} #{monster['monsterName']}"
   hehagame = "http://tos.hehagame.com/Category_show.php?ide=#{monster['monsterId']}".blue.bold.ul
   puts hehagame

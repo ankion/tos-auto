@@ -9,7 +9,9 @@ require './setting'
 class Tos
   attr_accessor :user
   def initialize
-    file_name = "logfile.log.#{ARGV[0] ? ARGV[0] : 'defaults'}"
+    file_name = "log/logfile.log.#{ARGV[0] ? ARGV[0] : 'defaults'}"
+    dir = File.dirname(file_name)
+    FileUtils.mkdir_p(dir) unless File.directory?(dir)
     File.delete(file_name) if File.exists? file_name
     @logger = Logger.new(file_name)
     color_ui = Settings['color_ui']
@@ -28,17 +30,6 @@ class Tos
     puts '登入遊戲中.....'
     @user.login
     puts '登入成功'
-    #match_string = '你已累積登入 <color=#FFFF80FF>(\d*)</color> 天'
-    #login_days = /#{match_string}/.match(res_json['data']['dailyMessage'])[1].to_i
-    #puts "你已累積登入 #{login_days} 天"
-    #puts '取得資料'
-    #@user.data = res_json['user']
-    #@user.bookmarks = res_json['user']['bookmarks']
-    #@floor.parse_floor_data(res_json['data'])
-    #@user.monster.parse_normal_skill(res_json['data']['normalSkills'])
-    #@user.monster.parse_data(res_json['data']['monsters'])
-    #@user.parse_card_data(res_json['cards'])
-    #@floor.stage_bonus = res_json['data']['stageBonus']
     self.print_user_sc
     prompt = 'Auto play?(y/N)'
     choice_auto_repeat = Readline.readline(prompt, true)
