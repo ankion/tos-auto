@@ -26,6 +26,7 @@ class Floor
   end
 
   def helper
+    return nil unless @choice_helper
     @helpers[@choice_helper]
   end
 
@@ -58,11 +59,13 @@ class Floor
 
   def enter
     get_data = {
-      :floorId => @floorId,
-      :team => @team['teamId'],
-      :helperUid => self.helper['uid'],
-      :clientHelperCard => self.helper['clientHelperCard'],
+      'floorId' => @floorId,
+      'team' => @team['teamId']
     }
+    if @choice_helper
+      get_data['helperUid'] = self.helper['uid']
+      get_data['clientHelperCard'] = self.helper['clientHelperCard']
+    end
     get_data['isMission'] = 'true' if @is_mission
     res_json = @toshttp.post("/api/floor/enter", get_data)
     update_waves(res_json)
@@ -168,18 +171,22 @@ class Floor
            monster['skillLevel'].to_s
         ]
       else
-        data_string += "0|0|0|0|0|0"
+        data_string += "0|0|0|0|0|0,"
       end
     end
-    monster = self.helper['monster']
-    data_string += "%s|%s|%s|%s|%s|%s" % [
-       monster['attack'].to_s,
-       monster['recover'].to_s,
-       monster['leaderSkill'].to_s,
-       monster['normalSkill']['skillId'].to_s,
-       monster['coolDown'].to_s,
-       monster['skillLevel'].to_s
-    ]
+    if self.helper
+      monster = self.helper['monster']
+      data_string += "%s|%s|%s|%s|%s|%s" % [
+         monster['attack'].to_s,
+         monster['recover'].to_s,
+         monster['leaderSkill'].to_s,
+         monster['normalSkill']['skillId'].to_s,
+         monster['coolDown'].to_s,
+         monster['skillLevel'].to_s
+      ]
+    else
+      data_string += "0|0|0|0|0|0"
+    end
   end
 
   def get_team_data
@@ -196,18 +203,22 @@ class Floor
           monster['skillLevel'].to_s
         ]
       else
-        data_string += "0|0|0|0|0|0"
+        data_string += "0|0|0|0|0|0,"
       end
     end
-    monster = self.helper['monster']
-    data_string += "%s|%s|%s|%s|%s|%s" % [
-      self.helper['cardId'].to_s,
-      monster['monsterId'].to_s,
-      monster['attack'].to_s,
-      monster['recover'].to_s,
-      monster['HP'].to_s,
-      monster['skillLevel'].to_s
-    ]
+    if self.helper
+      monster = self.helper['monster']
+      data_string += "%s|%s|%s|%s|%s|%s" % [
+        self.helper['cardId'].to_s,
+        monster['monsterId'].to_s,
+        monster['attack'].to_s,
+        monster['recover'].to_s,
+        monster['HP'].to_s,
+        monster['skillLevel'].to_s
+      ]
+    else
+      data_string += "0|0|0|0|0|0"
+    end
   end
 
   def get_team_size
@@ -246,7 +257,6 @@ class Floor
       'floorId' => @floorId,
       'team' => @team['teamId'],
       'floorHash' => @floorHash,
-      'helper_uid' => self.helper['uid'],
       'waves' => @waves.length,
       'maxAttack' => 0,
       'maxCombo' => 0,
@@ -255,6 +265,7 @@ class Floor
       'avgLoad' => 1327.46998355263 + rand(500),
       'bootTime' => 27418.5180664063 + rand(50000)
     }
+    @get_data['helper_uid'] = self.helper['uid'] if @choice_helper
   end
 
   def set_base_acs_data
@@ -445,7 +456,6 @@ class Floor
         "endHP" => @acs_data['l'],
         "teamSize" => self.get_team_size,
         "teamList" => self.get_team_list,
-        "helperUid" => self.helper['uid'],
         "totalDamageByEnemy" => @acs_data['r'],
         "totalDamageCountByEnemy" => @acs_data['i'],
         "minDamageByEnemy" => @acs_data['o'],
@@ -457,6 +467,7 @@ class Floor
         "maxAttackPerRoundDuringBossWave" => maxAttackPerRoundDuringBossWave
       }
     }
+    gamePlayData['team']["helperUid"] = self.helper['uid'] if self.helper
     @ext_acs_data['gamePlayData'] = gamePlayData.to_json
     sysinfo = Settings['sysInfo'].split('|')
     systemInfo = {

@@ -44,6 +44,73 @@ class User
     @guildMission = nil
   end
 
+  def register(name, attribute)
+    get_data = {
+      'name' => name,
+      'attribute' => attribute,
+      'type' => 'device',
+      'uniqueKey' => @uniqueKey,
+      'deviceKey' => @deviceKey,
+      'sysInfo' => Settings['sysInfo'],
+    }
+
+    systemInfo_data = {
+      #"appVersion" => Settings['tos_version'],
+      #"deviceModel" => "Motorola MB525",
+      #"deviceType" => "Handheld",
+      "deviceUniqueIdentifier" => @deviceKey,
+      #"operatingSystem" => "Android OS 2.3.7 / API-10 (GWK74/20130501)",
+      #"systemVersion" => "2.3.7",
+      #"processorType" => "ARMv7 VFPv3 NEON",
+      #"processorCount" => "1",
+      #"systemMemorySize" => "477",
+      #"graphicsMemorySize" => "35",
+      #"graphicsDeviceName" => "PowerVR SGX 530",
+      #"graphicsDeviceVendor" => "Imagination Technologies",
+      #"graphicsDeviceVersion" => "OpenGL ES-CM 1.1",
+      #"emua" => "FALSE",
+      #"emub" => "FALSE",
+      #"npotSupport" => "None",
+      #"supportsAccelerometer" => "True",
+      #"supportsGyroscope" => "False",
+      #"supportsLocationService" => "True",
+      #"supportsVibration" => "True",
+      #"maxTextureSize" => "2048",
+      #"screenWidth" => "480",
+      #"screenHeight" => "854",
+      #"screenDPI" => "264.7876",
+      #"IDFA" => "",
+      #"IDFV" => "",
+      #"MAC" => "40:fc:89:02:b3:55",
+      #"networkType" => "WIFI"
+    }
+    post_data = {
+      'systemInfo' => systemInfo_data.to_json
+    }
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/user/register", get_data, post_data)
+    self.update_data(res_json)
+    @game_data.update_monster(res_json)
+    self.update_cards(res_json)
+    @game_data.update_floors(res_json, @data['guildId'].to_i != 0)
+  end
+
+  def team_save(index, team)
+    get_data = {
+      "team#{index}" => team
+    }
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/user/team/save", get_data)
+  end
+
+  def set_helper(id)
+    get_data = {
+      "cardId" => id
+    }
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/user/set_helper", get_data)
+  end
+
   def login
     get_data = {
       'type' => 'device',

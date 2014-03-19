@@ -44,7 +44,7 @@ class TosHttp
         uri = Addressable::URI.new
         self.init_base_get_data
         salt = ''
-        if api.include? 'user/login'
+        if api.include? 'user/login' or api.include? 'user/register'
           get_data['olv'] = @encypt.getHash('olv', @base_get_data['timestamp'], '00')
           salt = get_data['deviceKey']
         else
