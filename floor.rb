@@ -4,7 +4,7 @@ require './api'
 require './checksum'
 
 class Floor
-  attr_accessor :helpers, :choice_helper, :waves
+  attr_accessor :helpers, :choice_helper, :waves, :is_mission
 
   def initialize(game_data, user, floor_data, team)
     @game_data = game_data
@@ -22,6 +22,7 @@ class Floor
     @acs_data = nil
     @ext_acs_data = nil
     @complete_data = nil
+    @is_mission = false
   end
 
   def helper
@@ -62,6 +63,7 @@ class Floor
       :helperUid => self.helper['uid'],
       :clientHelperCard => self.helper['clientHelperCard'],
     }
+    get_data['isMission'] = 'true' if @is_mission
     res_json = @toshttp.post("/api/floor/enter", get_data)
     update_waves(res_json)
   end

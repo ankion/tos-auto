@@ -57,7 +57,9 @@ class Tos
     puts "[%3d] %s" % [1, '隊伍']
     puts "[%3d] %s" % [2, '背包']
     puts "[%3d] %s" % [3, '商店']
-    puts "[%3d] %s" % [4, '公會']
+    if @user.data['guildId'].to_i > 0
+      puts "[%3d] %s" % [4, '公會']
+    end
     prompt = 'Choice zone?(b:back,q:quit)'
     choice_zone = Readline.readline(prompt, true)
     exit if choice_zone == 'q'
@@ -68,8 +70,131 @@ class Tos
       select_cards
     when '3'
       select_diamond
+    when '4'
+      select_guild
     end
     return false
+  end
+
+  def select_guild
+    print_guild
+    puts "[%3d] %s" % [1, '捐獻']
+    puts "[%3d] %s" % [2, '公會任務']
+    prompt = 'Choice operate?'
+    choice = Readline.readline(prompt, true)
+    exit if choice == 'q'
+    case choice
+    when '1'
+      guild_donate_coin
+    when '2'
+      select_guild_mission
+    end
+  end
+
+  def select_guild_mission
+    @user.guild_mission_list
+    unless @user.guildMission['rewardAvailable']
+      puts "本日任務已完成。"
+      return
+    end
+    mission_complete = true
+    missions = @user.guildMission['guildMissions']
+    missions.each_with_index do |mission, index|
+      puts "[%3d]%s%s" % [index + 1, (mission['achieved']) ? 'v' : ' ', mission['name']]
+      mission_complete = false unless mission['achieved']
+    end
+    if mission_complete
+      puts "[%3d] 領取任務獎賞" % [6]
+    end
+    prompt = 'Choice mission?'
+    choice = Readline.readline(prompt, true)
+    exit if choice =='q'
+    if choice == '6'
+      cards = @user.guild_mission_claim
+      puts '任務獎賞：'
+      cards.each do |card|
+        monster = card['monster']
+        puts "%3d lv%2d %s" % [monster['monsterId'], monster['level'], monster['monsterName']]
+      end
+      return
+    end
+    mission = missions[choice.to_i - 1]
+    if mission['type'].to_i <= 2
+      mission_donate_monster(mission)
+    elsif mission['type'].to_i == 4
+      mission_complete_floor(mission)
+    else
+      @user.guild_mission_achieve(mission)
+    end
+    puts "%s 完成。" % [mission['name']]
+  end
+
+  def mission_complete_floor(mission)
+    floor_data = @user.find_floor_by(mission['typeValue'])
+    @floor = @user.floor(floor_data)
+    @floor.is_mission = true
+    self.get_helper_list
+    self.fighting
+    @user.guild_mission_achieve(mission)
+  end
+
+  def mission_donate_monster(mission)
+    puts mission['name']
+    cards = nil
+    exp = nil
+    if mission['type'].to_i == 1
+      cards = mission['typeValue'].split(',')
+    else
+      exp = mission['typeValue'].to_i
+    end
+    @user.cards.each do |key, card|
+      next if card['bookmark']
+      monster = card['monster']
+      if cards
+        next unless cards.include? monster['monsterId']
+      end
+      if exp
+        next if monster['exp'].to_i < exp
+      end
+      puts "[%3d]%s%3d lv%2d %s (Exp:%d)" % [
+        card['cardId'],
+        (card['bookmark']) ? '*' : ' ',
+        monster['monsterId'],
+        monster['level'],
+        monster['monsterName'],
+        monster['exp']
+      ]
+    end
+    prompt = 'Choice target card?'
+    choice =  Readline.readline(prompt, true)
+    exit if choice == 'q'
+    targets = choice.split(',')
+    @user.guild_mission_achieve(mission, targets)
+  end
+
+  def guild_donate_coin
+    puts "金錢：%d" % [@user.data['coin']]
+    puts "[%3d] %s" % [1, '捐獻  100 黃金 (100,000)']
+    puts "[%3d] %s" % [2, '捐獻  200 黃金 (200,000)']
+    puts "[%3d] %s" % [3, '捐獻  500 黃金 (500,000)']
+    puts "[%3d] %s" % [4, '捐獻 1000 黃金 (1000,000)']
+    prompt = 'Choice donate?'
+    choice = Readline.readline(prompt, true)
+    exit if choice == 'q'
+    case choice
+    when '1'
+      @user.guild_donate_coin(100000)
+      puts "成功捐獻 100 黃金至公會。"
+    when '2'
+      @user.guild_donate_coin(200000)
+      puts "成功捐獻 200 黃金至公會。"
+    when '3'
+      @user.guild_donate_coin(500000)
+      puts "成功捐獻 500 黃金至公會。"
+    when '4'
+      @user.guild_donate_coin(1000000)
+      puts "成功捐獻 1000 黃金至公會。"
+    end
   end
 
   def select_diamond
@@ -135,6 +260,7 @@ class Tos
     prompt = 'Choice card?'
     choice_card =  Readline.readline(prompt, true)
     exit if choice_card == 'q'
+    return if choice_card.length == 0
     choice_card_operate choice_card.to_i
   end
 
@@ -159,6 +285,7 @@ class Tos
     prompt = 'Choice target card?'
     choice =  Readline.readline(prompt, true)
     exit if choice == 'q'
+    return if choice.length == 0
     targets = choice.split(',')
     card = @user.merge_card(sourceId, targets)
     monster = card['monster']
@@ -177,7 +304,7 @@ class Tos
       targets << cards.keys.first if cards.keys.first
       puts "[%3d] %3d %s %s" % [index + 1, evolution['monsterId'], evolution['monsterName'], cards_s]
     end
-    prompt = 'Evolution card?'
+    prompt = 'Evolution card?(y/N)'
     choice = Readline.readline(prompt, true)
     exit if choice == 'q'
     return if choice != 'y'
@@ -270,7 +397,8 @@ class Tos
 
     floors.each do |index, floor|
       puts "[%3d]%s %2d %s" % [floor['id'],((@user.data['completedFloorIds'].include? floor['id'].to_i) ? 'v' : ' ').bold.green,floor['stamina'],floor['name']]
-      last_floor = floor['id']
+      last_floor = floor['id'] unless last_floor
+      last_floor = nil if @user.data['completedFloorIds'].include? floor['id'].to_i
     end
     prompt = 'Choice floor?(b:back,q:quit)'
     prompt += "[#{last_floor}]" if last_floor
@@ -341,7 +469,6 @@ class Tos
         #end
       #end
 
-    self.print_user_sc
     #if @auto_repeat
       #@floor.wave_floor = (@floor.wave_floor.to_i + 1).to_s if @auto_repeat_next
       #print "Auto play again start at 5 sec."
@@ -352,9 +479,22 @@ class Tos
       #print "\n"
       #return false
     #end
-    prompt = 'Play again?(y/N)'
-    return false if Readline.readline(prompt, true) == 'y'
+    unless @floor.is_mission
+      self.print_user_sc
+      prompt = 'Play again?(y/N)'
+      return false if Readline.readline(prompt, true) == 'y'
+    end
     return true
+  end
+
+  def print_guild
+    guild = @user.data['guild']
+    puts '======================================'
+    puts "所屬公會：%s(%s)" % [guild['name'], guild['guildId']]
+    puts "等級：%-3d 經驗值：%-10d 金錢：%-10d" % [guild['level'], guild['exp'], guild['coins']]
+    puts "會員：%d/%d" % [guild['totalMembers'], guild['maxMembers']]
+    puts guild['announcement']
+    puts '======================================'
   end
 
   def print_user_sc
@@ -414,7 +554,7 @@ class Tos
   def print_gains(gains)
     puts "友情點數：%s" % [gains['friendpoint']]
     puts "經驗值：%s(%s)" % [gains['expGain'], gains['guildExpBonus']]
-    puts "金錢：%s(%s)" % [gains['friendpoint'], gains['guildCoinBonus']]
+    puts "金錢：%s(%s)" % [gains['coinGain'], gains['guildCoinBonus']]
     puts "公會經驗值：%s" % [gains['guildExpContribute']]
     puts "魔法石：%s" % [gains['diamonds']]
   end

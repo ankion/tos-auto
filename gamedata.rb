@@ -20,6 +20,7 @@ class GameData
     @floors.each do |index, zone|
       zone['name'] = attribute_color(zone['name'],index.to_i) if zone['name']
     end
+    @floor_data = {}
     @bonus_type = {
       0 => 'NONE',
       1 => '體力消耗減 50%',
@@ -99,6 +100,8 @@ class GameData
     monster['enemyAttack'] = extras['attack'] || monster['minEnemyAttack'].to_i + (level.to_i * monster['incEnemyAttack'].to_i)
     monster['enemyDefense'] = extras['defense'] || monster['minEnemyDefense'].to_i + (level.to_i * monster['incEnemyDefense'].to_i)
 
+    monster['exp'] = monster['baseMergeExp'].to_i + (monster['incMergeExp'].to_i * (monster['level'].to_i - 1) )
+
     monster
   end
 
@@ -121,6 +124,7 @@ class GameData
 
   def update_floors(res_json, guild = false)
     return unless res_json['data']['stageList'] or res_json['data']['floorList']
+    @floor_data = {}
     stageBonus_data = res_json['data']['stageBonus']
     stages = {}
     res_json['data']['stageList'].each do |stage|
@@ -143,7 +147,7 @@ class GameData
       stage = stages[floor_data[1].to_i]
       stamina = floor_data[4].to_i
       stamina = (stamina / 2.0).round if stage['bonus'] and stage['bonus']['bonusType'].to_i == 1
-      stage['floors'][floor_data[0].to_i] = {
+      temp_floor = {
         'id' => floor_data[0],
         'zoneId' => stages[floor_data[1].to_i]['zoneId'],
         'stageId' => floor_data[1],
@@ -151,6 +155,8 @@ class GameData
         'stamina' => stamina,
         'wave' => floor_data[5]
       }
+      stage['floors'][temp_floor['id'].to_i] = temp_floor
+      @floor_data[temp_floor['id'].to_i] = temp_floor
     end
     stages.each do |index, stage|
       @floors[stage['zoneId'].to_i]['stages'][index] = stage
@@ -159,5 +165,9 @@ class GameData
     @floors.delete 9 unless guild
 
     return unless res_json['data']['stageBonus']
+  end
+
+  def find_floor_by(id)
+    @floor_data[id.to_i]
   end
 end

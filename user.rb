@@ -8,7 +8,7 @@ require "./http"
 require "./gamedata"
 
 class User
-  attr_accessor :data, :current_team, :cards
+  attr_accessor :data, :current_team, :cards, :guildMission
 
   def initialize(uniqueKey, deviceKey)
     @uniqueKey = uniqueKey
@@ -33,6 +33,7 @@ class User
       "diamond" => nil,
       "bookmarks" => nil,
       "guildId" => nil,
+      "guild" => nil,
       "completedFloorIds" => nil,
       "completedStageIds" => nil,
     }
@@ -40,6 +41,7 @@ class User
     @current_floor = nil
     @current_team = nil
     @cards = {}
+    @guildMission = nil
   end
 
   def login
@@ -63,6 +65,10 @@ class User
 
   def floor(floor_data)
     @current_floor = Floor.new(@game_data, self, floor_data, @current_team)
+  end
+
+  def find_floor_by(id)
+    @game_data.find_floor_by(id)
   end
 
   def update_cards(res_json)
@@ -356,5 +362,71 @@ class User
     toshttp = TosHttp.new(@data)
     res_json = toshttp.post("/api/user/diamond/restore_stamina")
     self.update_data(res_json)
+  end
+
+  def guild_donate_coin(amount)
+    get_data = {
+      'guildId' => @data['guildId'],
+      'coin' => amount
+    }
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/guild/donate", get_data)
+    self.update_data(res_json)
+  end
+
+  def update_guild_mission(res_json)
+    @guildMission = res_json['data']['guildMission']
+    @guildMission['rewardMonsters'] = []
+    @guildMission['rewardMonstersIds'].each do |id|
+      @guildMission['rewardMonsters'] << @game_data.monster(id)
+    end
+    @guildMission['guildMissions'].each do |mission|
+      name = "任務類別 %s" % [mission['type']]
+      case mission['type']
+      when '1'
+        name = "牲品的獻祭 (Card:%s)" % [mission['typeValue']]
+      when '2'
+        name = "靈魂的獻祭 (Exp:%s)" % [mission['typeValue']]
+      when '3'
+        name = "無私的奉獻 (Coin:%s)" % [mission['typeValue']]
+      when '4'
+        name = "淨化地下城任務 (Floor:%s)" % [mission['typeValue']]
+      end
+      mission['name'] = name
+    end
+  end
+
+  def guild_mission_list
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/guild/mission/list")
+    update_guild_mission(res_json)
+  end
+
+  def guild_mission_achieve(mission, cardIds = nil)
+    get_data = {
+      'missionId' => mission['missionId'],
+      'missionKey' => @guildMission['missionKey']
+    }
+    get_data['cardIds'] = cardIds.join(',') if cardIds
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/guild/mission/achieve", get_data)
+    self.update_data(res_json)
+    self.update_card(res_json)
+  end
+
+  def guild_mission_claim
+    get_data = {
+      'missionKey' => @guildMission['missionKey']
+    }
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/guild/mission/claim", get_data)
+    self.update_data(res_json)
+    self.update_cards(res_json)
+    cards_data = res_json['data']['cardIds']
+    cards = []
+    cards_data.each do |cardId|
+      cards << @cards[cardId.to_i]
+    end
+    cards
   end
 end
