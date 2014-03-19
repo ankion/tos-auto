@@ -19,8 +19,6 @@ class Tos
     @user = User.new(Settings['uniqueKey'], Settings['deviceKey'])
     @auto_repeat = false
     @auto_repeat_next = false
-    @auto_sell = false #Settings['auto_sell'] || false
-    @sell_cards = Settings['sell_cards'] || []
     @auto_merge = Settings['auto_merge'] || false
     @merge_cards = Settings['merge_cards'] || []
     @last_zone = nil
@@ -447,18 +445,6 @@ class Tos
     print_loots(@floor.loots, @floor.loot_items)
 
       #auto_merge_card if @auto_merge
-
-      #if @auto_sell
-        #loop do
-          #targetCardIds = @user.get_sell_card(@sell_cards)
-          #break if targetCardIds.length == 0
-          #puts "Selling cards(#{targetCardIds.join(',')})"
-          #res_json = page_post(@user.get_sell_url(targetCardIds))
-          #@user.parse_card_data(res_json['cards'])
-          #@user.data['coin'] = res_json['user']['coin']
-          #@user.data['totalCards'] = res_json['user']['totalCards']
-        #end
-      #end
 
     #if @auto_repeat
       #@floor.wave_floor = (@floor.wave_floor.to_i + 1).to_s if @auto_repeat_next
