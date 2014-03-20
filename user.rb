@@ -206,7 +206,6 @@ class User
       @current_team['attack'] += member['monster']['attack'].to_i
       @current_team['recover'] += member['monster']['recover'].to_i
     end
-
   end
 
   def first_team

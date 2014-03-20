@@ -84,6 +84,33 @@ class GameData
     @exp_table.data[level.to_i + 1]
   end
 
+  def set_ratio(monster)
+    default_ratio = monster['level'].to_f / monster['maxLevel'].to_f
+    case monster['type'].to_i
+    when 2 # monster
+      default_ratio = default_ratio ** 0.6666667
+    when 3, 5 # fairy
+      default_ratio = default_ratio ** 1.5
+    end
+    monster['ratio'] = default_ratio
+  end
+
+  def set_hp(monster)
+    monster['hp'] = (monster['minCardHP'].to_i + ((monster['maxCardHP'].to_i - monster['minCardHP'].to_i) * monster['ratio'])).to_i
+  end
+
+  def set_attack(monster)
+    monster['attack'] = (monster['minCardAttack'].to_i + ((monster['maxCardAttack'].to_i - monster['minCardAttack'].to_i) * monster['ratio'])).to_i
+  end
+
+  def set_recover(monster)
+    monster['recover'] = (monster['minCardRecover'].to_i + ((monster['maxCardRecover'].to_i - monster['minCardRecover'].to_i) * monster['ratio'])).to_i
+  end
+
+  def level_to_exp(expType, level)
+    exp = (((level.to_i - 1).to_f ** 2.0) * (expType.to_f * 52.06164)).ceil
+  end
+
   def monsters(ids)
     monsters = []
     ids.each do |id|
@@ -100,9 +127,10 @@ class GameData
 
     monster['coolDown'] = monster['normalSkill']['maxCoolDown'].to_i - skillLevel.to_i + 1
 
-    monster['hp'] = ((monster['maxCardHP'].to_i - monster['minCardHP'].to_i) * (level.to_f / monster['maxLevel'].to_f) + monster['minCardHP'].to_i).to_i
-    monster['attack'] = ((monster['maxCardAttack'].to_i - monster['minCardAttack'].to_i) * (level.to_f / monster['maxLevel'].to_f) + monster['minCardAttack'].to_i).to_i
-    monster['recover'] = ((monster['maxCardRecover'].to_i - monster['minCardRecover'].to_i) * (level.to_f / monster['maxLevel'].to_f) + monster['minCardRecover'].to_i).to_i
+    set_ratio(monster)
+    set_hp(monster)
+    set_attack(monster)
+    set_recover(monster)
 
     monster['enemyHP'] = extras['HP'] || monster['minEnemyHP'].to_i + (level.to_i * monster['incEnemyHP'].to_i)
     monster['enemyAttack'] = extras['attack'] || monster['minEnemyAttack'].to_i + (level.to_i * monster['incEnemyAttack'].to_i)
