@@ -87,6 +87,11 @@ class Tos
       return
     end
     mission_complete = true
+    rewards = @user.guildMission['rewardMonsters']
+    puts '任務獎賞：'
+    rewards.each do |monster|
+      puts "%3d lv%2d %s" % [monster['monsterId'], monster['level'], monster['monsterName']]
+    end
     missions = @user.guildMission['guildMissions']
     missions.each_with_index do |mission, index|
       puts "[%3d]%s%s" % [index + 1, (mission['achieved']) ? 'v' : ' ', mission['name']]
@@ -128,7 +133,13 @@ class Tos
   end
 
   def mission_donate_monster(mission)
-    puts mission['name']
+    print mission['name']
+    if mission['monsters']
+      mission['monsters'].each do |monster|
+        print "[%s]" % [monster['monsterName']]
+      end
+    end
+    print "\n"
     cards = nil
     exp = nil
     if mission['type'].to_i == 1
@@ -157,6 +168,7 @@ class Tos
     prompt = 'Choice target card?'
     choice =  Readline.readline(prompt, true)
     exit if choice == 'q'
+    return if choice == 'b'
     targets = choice.split(',')
     @user.guild_mission_achieve(mission, targets)
   end
@@ -320,6 +332,7 @@ class Tos
     prompt = 'Choice operate?'
     choice = Readline.readline(prompt, true)
     exit if choice == 'q'
+    return if choice == 'b'
     case choice
     when '1'
       select_target_cards(cardId)

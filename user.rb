@@ -452,6 +452,7 @@ class User
       case mission['type']
       when '1'
         name = "牲品的獻祭 (Card:%s)" % [mission['typeValue']]
+        mission['monsters'] = @game_data.monsters(mission['typeValue'].split(','))
       when '2'
         name = "靈魂的獻祭 (Exp:%s)" % [mission['typeValue']]
       when '3'
@@ -478,7 +479,7 @@ class User
     toshttp = TosHttp.new(@data)
     res_json = toshttp.post("/api/guild/mission/achieve", get_data)
     self.update_data(res_json)
-    self.update_card(res_json)
+    self.update_cards(res_json)
   end
 
   def guild_mission_claim

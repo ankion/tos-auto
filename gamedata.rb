@@ -84,9 +84,17 @@ class GameData
     @exp_table.data[level.to_i + 1]
   end
 
+  def monsters(ids)
+    monsters = []
+    ids.each do |id|
+      monsters << self.monster(id)
+    end
+    monsters
+  end
+
   def monster(id, level = 1, skillLevel = 1, extras = {})
     return nil if id.to_i == 0
-    monster = @monster.data[id.to_i]
+    monster = @monster.data[id.to_i].clone
     monster['level'] = level
     monster['skillLevel'] = skillLevel
 
