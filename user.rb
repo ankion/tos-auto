@@ -267,8 +267,46 @@ class User
     cards = cards.sort_by {|k, v| v['create_at'].to_i}
   end
 
+  def find_cards_by_monsters(ids)
+    cards = @cards.select {|k,v| ids.include? v['monsterId'].to_i}
+    cards = cards.sort_by {|k, v| v['create_at'].to_i}
+  end
+
+  def find_cards_by_monsters_skill(ids)
+    cards = @cards.select {|k,v| ids.include? v['monsterId'].to_i \
+      and v['monster']['skillLevel'].to_i < v['monster']['normalSkill']['maxLevel'].to_i}
+    cards = cards.sort_by {|k, v| v['create_at'].to_i}
+  end
+
   def find_cards_by_monster_bookmark(id)
     @cards.select {|k,v| v['monsterId'].to_i == id.to_i and not v['bookmark']}
+  end
+
+  def sell_cards(cards)
+    card_count = cards.count
+    sell_time = 1
+    first = 1
+    if card_count <= 10
+      last = card_count
+    else
+      last = 10
+      sell_time = card_count / 10
+      sell_time += 1 if card_count % 10
+    end
+    res_json = nil
+    sell_time.times do
+      get_data = {
+        'targetCardIds' => cards[(first-1)..(last-1)].join(',')
+      }
+      toshttp = TosHttp.new(@data)
+      res_json = toshttp.post("/api/card/sell", get_data)
+      first = last + 1
+      last = last + 10
+      last = card_count if last > card_count
+    end
+    self.update_data(res_json)
+    self.update_cards(res_json)
+    res_json['data']
   end
 
   def get_evolve_card(cardId)

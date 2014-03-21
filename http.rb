@@ -65,12 +65,8 @@ class TosHttp
         self.init_base_post_data(full_url)
         post_data = @base_post_data.merge post_data
 
-        #if full_url.include? 'complete'
-          #post_data = post_data.merge(@floor.ext_acs_data)
-          #puts post_data.inspect
-        #end
         page = @web.post(full_url, post_data)
-        #@logger.info page.body
+        @logger.info page.body
         res_json = JSON.parse(page.body)
         break if res_json['respond'].to_i == 1
         puts res_json.inspect
@@ -83,7 +79,6 @@ class TosHttp
         end
         exit
       end
-      @logger.info(res_json)
       res_json
     }
   end

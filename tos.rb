@@ -64,13 +64,37 @@ class Tos
       268 => 2,
       269 => 2,
       #星靈
-      379 => 1,
-      380 => 1,
-      381 => 1,
-      382 => 1,
-      383 => 1,
-      384 => 1,
+      #379 => 1,
+      #380 => 1,
+      #381 => 1,
+      #382 => 1,
+      #383 => 1,
+      #384 => 1,
     }
+    @train_skills = [
+      { # 小史
+        'sources' => [104],
+        'targets' => [104,94],
+        'requires' => [37,38,39,40,359,360],
+        'evolve' => true
+      },
+      { # 黑狗
+        'sources' => [37,38,39,40],
+        'targets' => [105],
+        'requires' => [37,38,39,40],
+      },
+      { # 中史
+        'sources' => [105],
+        'targets' => [105],
+        'requires' => [359,360],
+        'evolve' => true
+      },
+      { # 雙子
+        'sources' => [359,360],
+        'targets' => [333],
+        'requires' => [359,360],
+      }
+    ]
   end
 
   def login
@@ -104,7 +128,10 @@ class Tos
     exit if choice_zone == 'q'
     case choice_zone
     when '1'
+      skill_card
       merge_card
+      evolve_card
+      sell_card
     when '2'
       select_team
     when '3'
@@ -314,6 +341,7 @@ class Tos
     choice_card =  Readline.readline(prompt, true)
     exit if choice_card == 'q'
     return if choice_card.length == 0
+    return if choice_card == 'b'
     choice_card_operate choice_card.to_i
   end
 
@@ -429,6 +457,9 @@ class Tos
       print "[%3d]" % [stage['id']]
       print ((@user.data['completedStageIds'].include? stage['id'].to_i) ? 'v' : ' ').bold.green
       print stage['name']
+      if choice_zone.to_i == 8
+        print " [%2d/20]" % [@user.data['items'][(stage['id'].to_i - 101).to_s].to_i]
+      end
       print " #{Time.at(stage['start_at'].to_i).strftime('%m/%d %H:%M')} ~ #{Time.at(stage['end_at'].to_i).strftime('%m/%d %H:%M')}" unless stage['start_at'] == ''
       bonus = stage['bonus']
       print " (#{bonus['bonusType_s']})".gold if bonus
@@ -511,16 +542,17 @@ class Tos
 
       #auto_merge_card if @auto_merge
 
-    #if @auto_repeat
+    if @auto_repeat
       #@floor.wave_floor = (@floor.wave_floor.to_i + 1).to_s if @auto_repeat_next
-      #print "Auto play again start at 5 sec."
-      #5.times do
-        #sleep 1.0
-        #print '.'
-      #end
-      #print "\n"
-      #return false
-    #end
+      print "Auto play again start at 5 sec."
+      5.times do
+        sleep 1.0
+        print '.'
+      end
+      print "\n"
+      return false
+    end
+
     unless @floor.is_mission
       self.print_user_sc
       prompt = 'Play again?(y/N)'
@@ -573,10 +605,11 @@ class Tos
       puts "第 #{index+1} 波"
       wave.each do |enemy|
         print "\tlv%3d %s" % [enemy['monster']['level'], enemy['monster']['monsterName']]
-        print "\t(hp:%d, attack:%d, defense:%d)\n" % [
+        print "\t(hp:%d, attack:%d, defense:%d, characteristic:%s)\n" % [
           enemy['monster']['enemyHP'],
           enemy['monster']['enemyAttack'],
-          enemy['monster']['enemyDefense']
+          enemy['monster']['enemyDefense'],
+          enemy['characteristic']
         ]
         if enemy['lootItem']
           prefix = "戰勵品：".bg_blue.yellow.bold
@@ -632,7 +665,6 @@ class Tos
           270,271,272,273,274,                     #小靈魂石
           275,276,277,278,279,                     #靈魂石
           443,444,445,446,447,                     #鴨小兵
-          #486,487,488,489,490,                     #龍牙棋
         ]
       },
       {
@@ -681,6 +713,105 @@ class Tos
     puts '======================================'
   end
 
+  def evolve_card
+    sources = [
+      319,321,323,325,327,                     #石像
+    ]
+    puts "自動進化："
+    cards = @user.find_cards_by_monsters(sources)
+    cards.each do |index, card|
+      monster = card['monster']
+      next if monster['level'].to_i != monster['maxLevel'].to_i
+      complete_evolve_card(card)
+    end
+    puts '======================================'
+  end
+
+  def complete_evolve_card(card)
+    monster = card['monster']
+    targets = []
+    cardId = card['cardId']
+    evolutions = @user.get_evolve_card(cardId)
+    evolutions.each_with_index do |evolution, index|
+      cards = @user.find_cards_by_monster_bookmark(evolution['monsterId'])
+      targets << cards.keys.first if cards.keys.first
+    end
+    return card if evolutions.count != targets.count
+    evolve_card = @user.evolve_card(cardId, targets)
+    evolve_monster = evolve_card['monster']
+    puts "%3d %s => %3d %s" % [
+      monster['monsterId'], monster['monsterName'],
+      evolve_monster['monsterId'], evolve_monster['monsterName']
+    ]
+    evolve_card
+  end
+
+  def sell_card
+    sell_cards = [
+      486,487,488,489,490,                     #龍牙棋
+    ]
+    sourceCards = @user.find_cards_by_monsters(sell_cards)
+    return if sourceCards.count == 0
+    puts '自動售卡：'
+    targets = []
+    sourceCards.each do |index, card|
+      monster = card['monster']
+      puts "%3d lv%2d %s" % [monster['monsterId'], monster['level'], monster['monsterName']]
+      targets << card['cardId'].to_i
+    end
+    res = @user.sell_cards(targets)
+    puts "售出金額：%s" % [res['coin']]
+    puts '======================================'
+  end
+
+  def skill_card
+    puts '自動練技能：'
+    @train_skills.each do |train|
+      next if @user.find_cards_by_monsters_skill(train['requires']).count == 0
+      loop do
+        need_rerun = false
+        sourceCards = @user.find_cards_by_monsters(train['sources'])
+        break if sourceCards.count == 0
+        sourceCard = nil
+        sourceCards.each do |index, card|
+          monster = card['monster']
+          if monster['normalSkill']['maxLevel'].to_i == monster['skillLevel'].to_i \
+            and monster['level'].to_i == monster['maxLevel'].to_i
+            next unless train['evolve']
+            evolve_card = complete_evolve_card(card)
+            next if card['monsterId'] == evolve_card['monsterId']
+            need_rerun = true
+            break
+          end
+          sourceCard = card
+          break
+        end
+        next if need_rerun
+        break unless sourceCard
+        sourceMonster = sourceCard['monster']
+        targetCards = @user.find_cards_by_monsters(train['targets'])
+        break if targetCards.count == 0
+        targetCards.each do |index, card|
+          next if card['cardId'] == sourceCard['cardId']
+          need_rerun = true
+          monster = card['monster']
+          merge_card = @user.merge_card(sourceCard['cardId'], card['cardId'].split(','))
+          mergeMonster = merge_card['monster']
+          puts "sk%2d lv%2d %s <= %s => sk%2d lv%2d %s" % [
+            sourceMonster['skillLevel'], sourceMonster['level'], sourceMonster['monsterName'],
+            monster['monsterName'],
+            mergeMonster['skillLevel'], mergeMonster['level'], mergeMonster['monsterName']
+          ]
+          sourceMonster = mergeMonster
+          break if mergeMonster['normalSkill']['maxLevel'].to_i == mergeMonster['skillLevel'].to_i \
+            and (mergeMonster['level'].to_i == monster['maxLevel'].to_i or not train['evolve'])
+        end
+        break unless need_rerun
+      end
+    end
+    puts '======================================'
+  end
+
   def keep_index(card)
     keep = @merges_keep[card['monster']['monsterId'].to_i]
     return 0 unless keep
@@ -699,7 +830,28 @@ class Tos
     exp = @user.level_to_exp(monster['expType'], level)
   end
 
+  def clear_evolve_card(targetIds, auto_merge_cards)
+    # 石像
+    targetIds.delete(270) if @user.find_cards_by_monster(319).count > 0
+    targetIds.delete(271) if @user.find_cards_by_monster(321).count > 0
+    targetIds.delete(272) if @user.find_cards_by_monster(323).count > 0
+    targetIds.delete(273) if @user.find_cards_by_monster(325).count > 0
+    targetIds.delete(274) if @user.find_cards_by_monster(327).count > 0
+    # 練技能
+    @train_skills.each do |train|
+      next if @user.find_cards_by_monsters_skill(train['requires']).count == 0
+      train['sources'].each do |id|
+        targetIds.delete(id)
+      end
+      train['targets'].each do |id|
+        targetIds.delete(id)
+      end
+    end
+    targetIds
+  end
+
   def find_merge_card(sourceCard, targetIds, auto_merge_cards)
+    targetIds = clear_evolve_card(targetIds, auto_merge_cards)
     #puts auto_merge_cards.inspect
     sourceMonster = sourceCard['monster']
     #puts sourceCard.inspect
@@ -711,6 +863,7 @@ class Tos
       and not card['bookmark'] \
       and card['cardId'] != sourceCard['cardId'] \
       and monster['attribute'].to_i == sourceMonster['attribute'].to_i \
+      and monster['groupId'].to_i == sourceMonster['groupId'].to_i \
       and card['index'].to_i > self.keep_index(card)
     end
     cards = cards.sort_by {|k, v| v['monsterId'].to_i}
@@ -724,7 +877,10 @@ class Tos
         next if monster['level'].to_i < level.to_i
       end
       #puts "%3d lv%2d %s (%d)" % [monster['monsterId'], monster['level'], monster['monsterName'], monster['sameAttrExp']]
-      total_exp += monster['sameAttrExp']
+      merge_exp = monster['exp'].to_i
+      merge_exp *= 1.5 if monster['attribute'] == sourceMonster['attribute']
+      merge_exp *= 1.5 if monster['groupId'].to_i != 0 and monster['groupId'] == sourceMonster['groupId']
+      total_exp += merge_exp
       cardIds << card['cardId'].to_i
     end
     #puts cardIds.join(',')

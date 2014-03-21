@@ -78,7 +78,7 @@ class Floor
       wave = []
       enemies.each do |enemy_data|
         enemy_data[1].each do |enemy|
-          enemy['monster'] = @game_data.monster(enemy['monsterId'])
+          enemy['monster'] = @game_data.monster(enemy['monsterId'], enemy['level'], 1, enemy['extras'])
           if enemy['lootItem']
             case enemy['lootItem']['type']
             when 'monster'
@@ -351,9 +351,9 @@ class Floor
 
       wave.each do |enemy|
         monster = enemy['monster']
-        enemy_hp = monster['enemyHP']
-        enemy_attack = monster['enemyAttack']
-        enemy_defense = monster['enemyDefense']
+        enemy_hp = monster['enemyHP'].to_i
+        enemy_attack = monster['enemyAttack'].to_i
+        enemy_defense = monster['enemyDefense'].to_i
 
         loop do
           @acs_data['a'] += 1
@@ -362,6 +362,11 @@ class Floor
           wave_combo = baseCombo + rand(maxCombo)
           wave_attack = team_attack * ((1 + rand(5)) + (wave_combo * 0.3))
           wave_attack *= (1 + rand(5))
+          # "BOSS_DESC_2", "召喚師完全回復生命力後，剩餘的回復力會轉化為攻擊力"
+          if enemy['characteristic'].to_i == 2
+            wave_attack = team_recover * ((1 + rand(5)) + (wave_combo * 0.3))
+            wave_attack *= (1 + rand(5))
+          end
           #puts "recover:#{wave_recover} hp:#{wave_hp} combo:#{wave_combo} attack:#{wave_attack}"
           enemy_damage = wave_attack - enemy_defense
           enemy_damage = 1 if enemy_damage < 1

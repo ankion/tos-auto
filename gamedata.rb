@@ -117,6 +117,7 @@ class GameData
 
   def monster(id, level = 1, skillLevel = 1, extras = {})
     return nil if id.to_i == 0
+    extras = {} unless extras
     monster = @monster.data[id.to_i].clone
     monster['level'] = level
     monster['skillLevel'] = skillLevel
