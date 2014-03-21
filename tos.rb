@@ -9,11 +9,6 @@ require './setting'
 class Tos
   attr_accessor :user
   def initialize
-    file_name = "log/logfile.log.#{ARGV[0] ? ARGV[0] : 'defaults'}"
-    dir = File.dirname(file_name)
-    FileUtils.mkdir_p(dir) unless File.directory?(dir)
-    File.delete(file_name) if File.exists? file_name
-    @logger = Logger.new(file_name)
     color_ui = Settings['color_ui']
     print "".sup_color(color_ui == true).ul
     @user = User.new(Settings['uniqueKey'], Settings['deviceKey'])
@@ -22,6 +17,60 @@ class Tos
     @auto_merge = Settings['auto_merge'] || false
     @merge_cards = Settings['merge_cards'] || []
     @last_zone = nil
+    @merges_level = {
+      86 => 10,
+      87 => 15,
+      88 => 10,
+      89 => 15,
+      90 => 10,
+      91 => 15,
+      92 => 10,
+      93 => 15,
+      94 => 10,
+      95 => 15,
+    }
+    @merges_keep = {
+      #進化魂
+      241 => 2,
+      242 => 2,
+      243 => 2,
+      244 => 2,
+      245 => 2,
+      246 => 2,
+      247 => 2,
+      248 => 2,
+      249 => 2,
+      250 => 2,
+      251 => 2,
+      252 => 2,
+      253 => 2,
+      254 => 2,
+      255 => 2,
+      256 => 2,
+      257 => 2,
+      258 => 2,
+      259 => 2,
+      260 => 2,
+      #龍蛋
+      261 => 2,
+      262 => 2,
+      263 => 2,
+      #魔劍
+      264 => 2,
+      265 => 2,
+      266 => 2,
+      #西瓜
+      267 => 2,
+      268 => 2,
+      269 => 2,
+      #星靈
+      379 => 1,
+      380 => 1,
+      381 => 1,
+      382 => 1,
+      383 => 1,
+      384 => 1,
+    }
   end
 
   def login
@@ -43,23 +92,26 @@ class Tos
 
   def user_zone
     self.print_user_sc
-    puts "[%3d] %s" % [1, '隊伍']
-    puts "[%3d] %s" % [2, '背包']
-    puts "[%3d] %s" % [3, '商店']
+    puts "[%3d] %s" % [1, '自動強化合成']
+    puts "[%3d] %s" % [2, '隊伍']
+    puts "[%3d] %s" % [3, '背包']
+    puts "[%3d] %s" % [4, '商店']
     if @user.data['guildId'].to_i > 0
-      puts "[%3d] %s" % [4, '公會']
+      puts "[%3d] %s" % [5, '公會']
     end
     prompt = 'Choice zone?(b:back,q:quit)'
     choice_zone = Readline.readline(prompt, true)
     exit if choice_zone == 'q'
     case choice_zone
     when '1'
-      select_team
+      merge_card
     when '2'
-      select_cards
+      select_team
     when '3'
-      select_diamond
+      select_cards
     when '4'
+      select_diamond
+    when '5'
       select_guild
     end
     return false
@@ -300,7 +352,7 @@ class Tos
     targets = []
     evolutions = @user.get_evolve_card(cardId)
     evolutions.each_with_index do |evolution, index|
-      cards = @user.find_cards_by_monster(evolution['monsterId'])
+      cards = @user.find_cards_by_monster_bookmark(evolution['monsterId'])
       cards_s = "(%s)" % [cards.keys.join(',')]
       targets << cards.keys.first if cards.keys.first
       puts "[%3d] %3d %s %s" % [index + 1, evolution['monsterId'], evolution['monsterName'], cards_s]
@@ -560,33 +612,123 @@ class Tos
     end
   end
 
-  def auto_merge_card(debug = false)
-    puts "Mergeing master cards"
-    @merge_cards.each do |key, merge_card|
-      merge_card['source_cards'].each do |s|
-        loop do
-          sourceCardId = @user.get_source_card(s, merge_card)
-          #puts "sourceCardId:#{sourceCardId}"
-          break unless sourceCardId
-          targetCardIds = @user.get_master_merge_card(sourceCardId, merge_card)
-          break if targetCardIds.length == 0
-          break if targetCardIds.length < merge_card['require_target_amount_min']
-          print "#{sourceCardId} lv#{@user.cards[sourceCardId][:level]} #{@user.monster.data[s.to_s][:monsterName]} <= ("
-          targetCardIds.each do |t|
-            card = @user.cards[t]
-            print "," unless t == targetCardIds.first
-            print "lv#{card[:level]} #{@user.monster.data[card[:monsterId]][:monsterName]}"
-          end
-          print ")\n"
-          unless debug
-            res_json = page_post(@user.get_merge_url(sourceCardId, targetCardIds))
-            @user.parse_card_data(res_json['cards'])
-            @user.data['coin'] = res_json['user']['coin']
-            @user.data['totalCards'] = res_json['user']['totalCards']
-          end
+  def merge_card
+    merges = [
+      {
+        'sources' => [
+          86,87,88,89,90,91,92,93,94,95,           #小魔女
+        ],
+        'targets' => [
+          56,57,58,59,60,61,62,63,64,65,           #地精
+          66,67,68,69,70,71,72,73,74,75,           #精靈
+          76,77,78,79,80,81,82,83,84,85,           #蜥蝪
+          96,97,98,99,100,101,102,103,104,105,     #史萊姆
+          106,107,108,109,110,111,112,113,114,115, #狼人
+          241,242,243,244,245,246,247,248,249,250, #進化魂
+          251,252,253,254,255,256,257,258,259,260, #進化魂
+          261,262,263,                             #龍蛋
+          264,265,266,                             #魔劍
+          267,268,269,                             #西瓜
+          270,271,272,273,274,                     #小靈魂石
+          275,276,277,278,279,                     #靈魂石
+          443,444,445,446,447,                     #鴨小兵
+          #486,487,488,489,490,                     #龍牙棋
+        ]
+      },
+      {
+        'sources' => [
+          319,321,323,325,327,                     #石像
+        ],
+        'targets' => [
+          379,380,381,382,383,384,                 #星靈
+          403,404,405,406,407,                     #十二宮小兵
+        ]
+      }
+    ]
+
+    auto_merge_cards = Settings['auto_merge_cards'] || []
+    if auto_merge_cards.count > 0
+      merge_data = {
+        'sources' => auto_merge_cards,
+        'targets' => [
+          86,87,88,89,90,91,92,93,94,95,           #小魔女
+          280,281,282,283,284,                     #千年靈魂石
+          320,322,324,326,328,                     #二階石像
+        ]
+      }
+      merges << merge_data
+    end
+
+    puts "自動強化合成："
+    merges.each do |merge|
+      merge['sources'].each do |sourceId|
+        sourceCard = @user.find_cards_by_monster(sourceId).first
+        next unless sourceCard
+        sourceMonster = sourceCard.last['monster']
+        targetIds = find_merge_card(sourceCard.last, merge['targets'], auto_merge_cards)
+        next if targetIds.count == 0
+        puts "%3d lv%2d %s <= {" % [sourceMonster['monsterId'], sourceMonster['level'], sourceMonster['monsterName']]
+        targetCards = eval "@user.cards.values_at(#{targetIds.join(',')})"
+        targetCards.each do |card|
+          monster = card['monster']
+          puts "\t%3d lv%2d %s" % [monster['monsterId'], monster['level'], monster['monsterName']]
         end
+        card = @user.merge_card(sourceCard.last['cardId'], targetIds)
+        monster = card['monster']
+        puts "} => %3d lv%2d %s" % [monster['monsterId'], monster['level'], monster['monsterName']]
       end
     end
+    puts '======================================'
+  end
+
+  def keep_index(card)
+    keep = @merges_keep[card['monster']['monsterId'].to_i]
+    return 0 unless keep
+    keep
+  end
+
+  def max_level(monster)
+    level = nil
+    level = @merges_level[monster['monsterId'].to_i] if @merges_level[monster['monsterId'].to_i]
+    level = monster['maxLevel'] if not level or level > monster['maxLevel'].to_i
+    level
+  end
+
+  def merge_to_level(monster)
+    level = self.max_level(monster)
+    exp = @user.level_to_exp(monster['expType'], level)
+  end
+
+  def find_merge_card(sourceCard, targetIds, auto_merge_cards)
+    #puts auto_merge_cards.inspect
+    sourceMonster = sourceCard['monster']
+    #puts sourceCard.inspect
+    maxLevelExp = self.merge_to_level(sourceMonster)
+    #puts "%d/%d %s" % [sourceCard['exp'], maxLevelExp, sourceMonster['monsterName']]
+    cards = @user.cards.select do |index, card|
+      monster = card['monster']
+      targetIds.include? monster['monsterId'].to_i \
+      and not card['bookmark'] \
+      and card['cardId'] != sourceCard['cardId'] \
+      and monster['attribute'].to_i == sourceMonster['attribute'].to_i \
+      and card['index'].to_i > self.keep_index(card)
+    end
+    cards = cards.sort_by {|k, v| v['monsterId'].to_i}
+    total_exp = 0
+    cardIds = []
+    cards.each do |index, card|
+      break if (total_exp + sourceCard['exp'].to_i) > maxLevelExp
+      monster = card['monster']
+      if auto_merge_cards.include? sourceMonster['monsterId'].to_i
+        level = self.max_level(monster)
+        next if monster['level'].to_i < level.to_i
+      end
+      #puts "%3d lv%2d %s (%d)" % [monster['monsterId'], monster['level'], monster['monsterName'], monster['sameAttrExp']]
+      total_exp += monster['sameAttrExp']
+      cardIds << card['cardId'].to_i
+    end
+    #puts cardIds.join(',')
+    cardIds
   end
 end
 

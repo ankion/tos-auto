@@ -6,6 +6,11 @@ require "mechanize"
 
 class TosHttp
   def initialize(user_data)
+    file_name = "log/logfile.log.#{ARGV[0] ? ARGV[0] : 'defaults'}"
+    dir = File.dirname(file_name)
+    FileUtils.mkdir_p(dir) unless File.directory?(dir)
+    File.delete(file_name) if File.exists? file_name
+    @logger = Logger.new(file_name)
     @base_url = Settings['tos_url']
     @web = Mechanize.new { |agent|
       agent.follow_meta_refresh = true
@@ -78,7 +83,7 @@ class TosHttp
         end
         exit
       end
-
+      @logger.info(res_json)
       res_json
     }
   end

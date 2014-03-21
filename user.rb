@@ -36,6 +36,7 @@ class User
       "guild" => nil,
       "completedFloorIds" => nil,
       "completedStageIds" => nil,
+      "items" => nil,
     }
     @game_data = GameData.new
     @current_floor = nil
@@ -140,9 +141,15 @@ class User
 
   def update_cards(res_json)
     return unless res_json['cards']
+    count_card = {}
     @cards = {}
     res_json['cards'].each do |val|
       card_data = val.split('|')
+      if count_card[card_data[1].to_i]
+        count_card[card_data[1].to_i] += 1
+      else
+        count_card[card_data[1].to_i] = 1
+      end
       @cards[card_data[0].to_i] = {
         'cardId' => card_data[0],
         'monsterId' => card_data[1],
@@ -151,7 +158,8 @@ class User
         'skillLevel' => card_data[4],
         'create_at' => card_data[5],
         'monster' => @game_data.monster(card_data[1], card_data[3], card_data[4]),
-        'bookmark' => @data['bookmarks'].include?(card_data[0]) | @data['teamArray'].include?(card_data[0])
+        'bookmark' => @data['bookmarks'].include?(card_data[0]) | @data['teamArray'].include?(card_data[0]),
+        'index' => count_card[card_data[1].to_i]
       }
     end
   end
@@ -220,111 +228,6 @@ class User
     @data['totalCards'].to_i >= (@data['inventoryCapacity'].to_i + 10)
   end
 
-  def sell_cards(cards)
-    card_count = cards.count
-    sell_time = 1
-    first = 1
-    if card_count <= 10
-      last = card_count
-    else
-      last = 10
-      sell_time = card_count / 10
-      sell_time += 1 if card_count % 10
-    end
-    res_json = nil
-    merge_time.times do
-      get_data = {
-        'targetCardIds' => cards[(first-1)..(last-1)].join(',')
-      }
-      toshttp = TosHttp.new(@data)
-      res_json = toshttp.post("/api/card/sell", get_data)
-      first = last + 1
-      last = last + 10
-      last = card_count if last > card_count
-    end
-    self.update_data(res_json)
-    self.update_cards(res_json)
-    res_json['data']
-  end
-
-  def get_source_card(source, merge_card)
-    sourceCardId = nil
-    @cards.each do |card|
-      stop_at_lv_max = true
-      stop_at_cd_max = true
-      monster = @monster.data[card[1][:monsterId]]
-      next if source.to_i != monster[:monsterId].to_i
-      if merge_card['stop_at_lv_max']
-        stop_at_lv_max = false if card[1][:level].to_i < monster[:maxLevel].to_i
-      else
-        stop_at_lv_max = false
-      end
-      if merge_card['stop_at_cd_max']
-        stop_at_cd_max = false if card[1][:skillLevel].to_i < monster[:normalSkill][:maxLevel].to_i
-      else
-        stop_at_cd_max = false
-      end
-      if (stop_at_lv_max == merge_card['stop_at_lv_max'] and stop_at_cd_max == merge_card['stop_at_cd_max']) and (merge_card['stop_at_lv_max'] or merge_card['stop_at_cd_max'])
-        card[1][:merged] = true
-        next
-      end
-      sourceCardId = card[1][:cardId]
-      #puts "source:#{monster[:monsterName]}"
-      break
-    end
-    return sourceCardId
-  end
-
-  def get_merge_card(sourceCardId, target_cards)
-    targetCardIds = []
-    source = @monster.data[@cards[sourceCardId][:monsterId]]
-    #puts "source:#{source.inspect}"
-    @cards.each do |l|
-      next if sourceCardId == l[1][:cardId]
-      next if l[1][:merged]
-      next if @bookmarks.include? l[1][:cardId]
-      target = @monster.data[l[1][:monsterId]]
-      #puts "target:#{target.inspect}"
-      next unless target_cards.include? target[:monsterId]
-      #puts "source:#{source[:attribute]} target:#{target[:attribute]}"
-      if source[:attribute] == target[:attribute]
-        l[1][:merged] = true
-        targetCardIds << l[1][:cardId]
-        break if targetCardIds.length == 5
-      end
-    end
-    return targetCardIds
-  end
-
-  def get_master_merge_card(sourceCardId, merge_card)
-    targetCardIds = []
-    source = @monster.data[@cards[sourceCardId][:monsterId]]
-    #puts "source:#{source.inspect}"
-    @cards.each do |l|
-      next if sourceCardId == l[1][:cardId]
-      next if l[1][:merged]
-      next if @bookmarks.include? l[1][:cardId]
-      target = @monster.data[l[1][:monsterId]]
-      #puts "target:#{target.inspect}"
-      next unless merge_card['target_cards'].include? target[:monsterId].to_i
-      if source[:monsterId] == target[:monsterId]
-        next if l[1][:level].to_i > @cards[sourceCardId][:level].to_i
-        next if l[1][:level].to_i == target[:maxLevel].to_i
-        next if l[1][:skillLevel].to_i == target[:normalSkill][:maxLevel].to_i
-      end
-      #puts "target:#{target[:monsterName]}"
-      #puts "source:#{source[:attribute]} target:#{target[:attribute]}"
-      next if l[1][:level].to_i < merge_card['require_target_lv'] and l[1][:level].to_i < target[:maxLevel].to_i
-      if source[:attribute] == target[:attribute]
-        l[1][:merged] = true
-        targetCardIds << l[1][:cardId]
-        break if targetCardIds.length >= merge_card['require_target_amount_max']
-        break if targetCardIds.length == 5
-      end
-    end
-    return targetCardIds
-  end
-
   def merge_card(sourceCardId, targetCardIds)
     card_count = targetCardIds.count
     merge_time = 1
@@ -355,7 +258,16 @@ class User
     card
   end
 
+  def level_to_exp(expType, level)
+    exp = (((level.to_i - 1).to_f ** 2.0) * (expType.to_f * 52.06164)).ceil
+  end
+
   def find_cards_by_monster(id)
+    cards = @cards.select {|k,v| v['monsterId'].to_i == id.to_i}
+    cards = cards.sort_by {|k, v| v['create_at'].to_i}
+  end
+
+  def find_cards_by_monster_bookmark(id)
     @cards.select {|k,v| v['monsterId'].to_i == id.to_i and not v['bookmark']}
   end
 
@@ -458,6 +370,8 @@ class User
         name = "無私的奉獻 (Coin:%s)" % [mission['typeValue']]
       when '4'
         name = "淨化地下城任務 (Floor:%s)" % [mission['typeValue']]
+      when '6'
+        name = "搜集繁星的碎片 (%s %d/20)" % [@game_data.item(mission['typeValue']), @data['items'][mission['typeValue']]]
       end
       mission['name'] = name
     end

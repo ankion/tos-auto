@@ -107,10 +107,6 @@ class GameData
     monster['recover'] = (monster['minCardRecover'].to_i + ((monster['maxCardRecover'].to_i - monster['minCardRecover'].to_i) * monster['ratio'])).to_i
   end
 
-  def level_to_exp(expType, level)
-    exp = (((level.to_i - 1).to_f ** 2.0) * (expType.to_f * 52.06164)).ceil
-  end
-
   def monsters(ids)
     monsters = []
     ids.each do |id|
@@ -137,6 +133,7 @@ class GameData
     monster['enemyDefense'] = extras['defense'] || monster['minEnemyDefense'].to_i + (level.to_i * monster['incEnemyDefense'].to_i)
 
     monster['exp'] = monster['baseMergeExp'].to_i + (monster['incMergeExp'].to_i * (monster['level'].to_i - 1) )
+    monster['sameAttrExp'] = (monster['exp'] * 1.5).to_i
 
     monster
   end
