@@ -16,6 +16,7 @@ class Tos
     @auto_enhance = Settings['auto_enhance'] || false
     @last_zone = nil
     @auto_sells = Settings['auto_sells'] || []
+    @auto_train_skills = Settings['auto_train_skills'] || false
     @auto_merge_min = Settings['auto_merge_min'] || 5
     @auto_merge_keeps = Settings['auto_merge_keeps'] || {}
     @auto_merge_cards = Settings['auto_merge_cards'] || []
@@ -719,10 +720,10 @@ class Tos
   end
 
   def auto_enhance_cards
-    skill_card
+    skill_card if @auto_train_skills
     merge_card
     evolve_card
-    sell_card
+    sell_card if @auto_sells.count > 0
   end
 
   def merge_card
@@ -885,6 +886,7 @@ class Tos
     targetIds.delete(273) if @user.find_cards_by_monster(325).count > 0
     targetIds.delete(274) if @user.find_cards_by_monster(327).count > 0
     # 練技能
+    return targetIds unless @auto_train_skills
     @train_skills.each do |train|
       next unless requires_exist(train['requires'])
       train['sources'].each do |id|
