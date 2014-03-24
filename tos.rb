@@ -317,7 +317,7 @@ class Tos
         monster['exp']
       ]
     end
-    prompt = 'Choice target card?'
+    prompt = 'Choice target card?(separated by comma)'
     choice =  Readline.readline(prompt, true)
     exit if choice == 'q'
     return if choice == 'b'
@@ -436,7 +436,7 @@ class Tos
         monster['monsterName']
       ]
     end
-    prompt = 'Choice target card?'
+    prompt = 'Choice target card?(separated by comma)'
     choice =  Readline.readline(prompt, true)
     exit if choice == 'q'
     return if choice.length == 0
