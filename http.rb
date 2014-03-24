@@ -72,7 +72,9 @@ class TosHttp
         puts res_json.inspect
         if res_json['respond'].to_i == 6 or res_json['respond'].to_i == 3
           #puts res_json['respond']['errorMessage']
-          exit unless res_json['errorMessage'].include? 'Not enougth stamina'
+          if res_json['respond'].to_i == 3
+            exit unless res_json['errorMessage'].include? 'Not enougth stamina'
+          end
           wait_time = res_json['wait'] ? res_json['wait'].to_i : 600
           print_wait(wait_time,false)
           next
