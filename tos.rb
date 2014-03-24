@@ -531,6 +531,8 @@ class Tos
       print stage['name']
       if choice_zone.to_i == 8
         print " [%2d/20]" % [@user.data['items'][(stage['id'].to_i - 101).to_s].to_i]
+      elsif choice_zone.to_i == 9
+        print " [%2d/100]" % [@user.data['items']['13'].to_i]
       end
       print " #{Time.at(stage['start_at'].to_i).strftime('%m/%d %H:%M')} ~ #{Time.at(stage['end_at'].to_i).strftime('%m/%d %H:%M')}" unless stage['start_at'] == ''
       bonus = stage['bonus']
