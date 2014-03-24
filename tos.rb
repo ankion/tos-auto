@@ -14,9 +14,47 @@ class Tos
     @user = User.new(Settings['uniqueKey'], Settings['deviceKey'])
     @auto_repeat = false
     @auto_repeat_next = false
-    @auto_merge = Settings['auto_merge'] || false
+    @auto_enhance = Settings['auto_enhance'] || false
     @merge_cards = Settings['merge_cards'] || []
     @last_zone = nil
+    @auto_merge_min = 5
+    @auto_merge_cards = Settings['auto_merge_cards'] || []
+    @auto_merge_cards_targets = [
+      86,87,88,89,90,91,92,93,94,95,           #小魔女
+      280,281,282,283,284,                     #千年靈魂石
+      320,322,324,326,328,                     #二階石像
+    ]
+    @merges = [
+      {
+        'sources' => [
+          86,87,88,89,90,91,92,93,94,95,           #小魔女
+        ],
+        'targets' => [
+          56,57,58,59,60,61,62,63,64,65,           #地精
+          66,67,68,69,70,71,72,73,74,75,           #精靈
+          76,77,78,79,80,81,82,83,84,85,           #蜥蝪
+          96,97,98,99,100,101,102,103,104,105,     #史萊姆
+          106,107,108,109,110,111,112,113,114,115, #狼人
+          241,242,243,244,245,246,247,248,249,250, #進化魂
+          251,252,253,254,255,256,257,258,259,260, #進化魂
+          261,262,263,                             #龍蛋
+          264,265,266,                             #魔劍
+          267,268,269,                             #西瓜
+          270,271,272,273,274,                     #小靈魂石
+          275,276,277,278,279,                     #靈魂石
+          443,444,445,446,447,                     #鴨小兵
+        ]
+      },
+      {
+        'sources' => [
+          319,321,323,325,327,                     #石像
+        ],
+        'targets' => [
+          379,380,381,382,383,384,                 #星靈
+          403,404,405,406,407,                     #十二宮小兵
+        ]
+      }
+    ]
     @merges_level = {
       86 => 10,
       87 => 15,
@@ -71,29 +109,114 @@ class Tos
       #383 => 1,
       #384 => 1,
     }
+    @sells = [
+      486,487,488,489,490,                     #龍牙棋
+    ]
+    @evolves = [
+      319,321,323,325,327,                     #石像
+    ]
     @train_skills = [
-      { # 小史
+      { # 防禦姿勢 ‧ 暗
         'sources' => [104],
         'targets' => [104,94],
-        'requires' => [37,38,39,40,359,360],
+        'requires' => [40,39,38,37,360,359],
         'evolve' => true
       },
       { # 黑狗
-        'sources' => [37,38,39,40],
+        'sources' => [40,39,38,37],
         'targets' => [105],
-        'requires' => [37,38,39,40],
+        'requires' => [40,39,38,37],
       },
-      { # 中史
+      { # 防禦姿勢 ‧ 暗
         'sources' => [105],
         'targets' => [105],
-        'requires' => [359,360],
+        'requires' => [360,359],
         'evolve' => true
       },
       { # 雙子
-        'sources' => [359,360],
+        'sources' => [360,359],
         'targets' => [333],
-        'requires' => [359,360],
-      }
+        'requires' => [360,359],
+      },
+      { # 防禦姿勢 ‧ 水
+        'sources' => [96],
+        'targets' => [96,86],
+        'requires' => [178,177,176,310,309],
+        'evolve' => true
+      },
+      { # 防禦姿勢 ‧ 水
+        'sources' => [178,177,176,310,309],
+        'targets' => [97],
+        'requires' => [178,177,176,310,309]
+      },
+      { # 防禦姿勢 ‧ 火
+        'sources' => [98],
+        'targets' => [98,88],
+        'requires' => [28,27,26,25,312,311],
+        'evolve' => true
+      },
+      { # 防禦姿勢 ‧ 火
+        'sources' => [28,27,26,25,312,311],
+        'targets' => [99],
+        'requires' => [28,27,26,25,312,311]
+      },
+      { # 防禦姿勢 ‧ 木
+        'sources' => [100],
+        'targets' => [100,90],
+        'requires' => [314,313],
+        'evolve' => true
+      },
+      { # 防禦姿勢 ‧ 木
+        'sources' => [314,313],
+        'targets' => [101],
+        'requires' => [314,313]
+      },
+      { # 防禦姿勢 ‧ 光
+        'sources' => [102],
+        'targets' => [102,92],
+        'requires' => [187,186,185],
+        'evolve' => true
+      },
+      { # 防禦姿勢 ‧ 光
+        'sources' => [187,186,185],
+        'targets' => [103],
+        'requires' => [187,186,185]
+      },
+      { # 裝甲破壞
+        'sources' => [35,34,33],
+        'targets' => [107,109,111,113,115],
+        'requires' => [35,34,33]
+      },
+      { # 防禦壁
+        'sources' => [32,31,30,29],
+        'targets' => [261,262,263],
+        'requires' => [32,31,30,29]
+      },
+      { # 攻擊姿勢 ‧ 水
+        'sources' => [24,23,22,21],
+        'targets' => [57],
+        'requires' => [24,23,22,21]
+      },
+      { # 攻擊姿勢 ‧ 火
+        'sources' => [181,180,179,416,415],
+        'targets' => [59],
+        'requires' => [181,180,179,416,415]
+      },
+      { # 攻擊姿勢 ‧ 木
+        'sources' => [393,392],
+        'targets' => [61],
+        'requires' => [393,392]
+      },
+      { # 攻擊姿勢 ‧ 光
+        'sources' => [420,419],
+        'targets' => [63],
+        'requires' => [420,419]
+      },
+      { # 攻擊姿勢 ‧ 暗
+        'sources' => [190,189,188],
+        'targets' => [65],
+        'requires' => [190,189,188]
+      },
     ]
   end
 
@@ -128,10 +251,7 @@ class Tos
     exit if choice_zone == 'q'
     case choice_zone
     when '1'
-      skill_card
-      merge_card
-      evolve_card
-      sell_card
+      self.auto_enhance_cards
     when '2'
       select_team
     when '3'
@@ -540,7 +660,7 @@ class Tos
     print_gains(@floor.gains)
     print_loots(@floor.loots, @floor.loot_items)
 
-      #auto_merge_card if @auto_merge
+    self.auto_enhance_cards if @auto_enhance
 
     if @auto_repeat
       #@floor.wave_floor = (@floor.wave_floor.to_i + 1).to_s if @auto_repeat_next
@@ -645,59 +765,29 @@ class Tos
     end
   end
 
-  def merge_card
-    merges = [
-      {
-        'sources' => [
-          86,87,88,89,90,91,92,93,94,95,           #小魔女
-        ],
-        'targets' => [
-          56,57,58,59,60,61,62,63,64,65,           #地精
-          66,67,68,69,70,71,72,73,74,75,           #精靈
-          76,77,78,79,80,81,82,83,84,85,           #蜥蝪
-          96,97,98,99,100,101,102,103,104,105,     #史萊姆
-          106,107,108,109,110,111,112,113,114,115, #狼人
-          241,242,243,244,245,246,247,248,249,250, #進化魂
-          251,252,253,254,255,256,257,258,259,260, #進化魂
-          261,262,263,                             #龍蛋
-          264,265,266,                             #魔劍
-          267,268,269,                             #西瓜
-          270,271,272,273,274,                     #小靈魂石
-          275,276,277,278,279,                     #靈魂石
-          443,444,445,446,447,                     #鴨小兵
-        ]
-      },
-      {
-        'sources' => [
-          319,321,323,325,327,                     #石像
-        ],
-        'targets' => [
-          379,380,381,382,383,384,                 #星靈
-          403,404,405,406,407,                     #十二宮小兵
-        ]
-      }
-    ]
+  def auto_enhance_cards
+    skill_card
+    merge_card
+    evolve_card
+    sell_card
+  end
 
-    auto_merge_cards = Settings['auto_merge_cards'] || []
-    if auto_merge_cards.count > 0
+  def merge_card
+    if @auto_merge_cards.count > 0
       merge_data = {
-        'sources' => auto_merge_cards,
-        'targets' => [
-          86,87,88,89,90,91,92,93,94,95,           #小魔女
-          280,281,282,283,284,                     #千年靈魂石
-          320,322,324,326,328,                     #二階石像
-        ]
+        'sources' => @auto_merge_cards,
+        'targets' => @auto_merge_cards_targets
       }
-      merges << merge_data
+      @merges << merge_data
     end
 
     puts "自動強化合成："
-    merges.each do |merge|
+    @merges.each do |merge|
       merge['sources'].each do |sourceId|
         sourceCard = @user.find_cards_by_monster(sourceId).first
         next unless sourceCard
         sourceMonster = sourceCard.last['monster']
-        targetIds = find_merge_card(sourceCard.last, merge['targets'], auto_merge_cards)
+        targetIds = find_merge_card(sourceCard.last, merge['targets'], @auto_merge_cards)
         next if targetIds.count == 0
         puts "%3d lv%2d %s <= {" % [sourceMonster['monsterId'], sourceMonster['level'], sourceMonster['monsterName']]
         targetCards = eval "@user.cards.values_at(#{targetIds.join(',')})"
@@ -714,11 +804,8 @@ class Tos
   end
 
   def evolve_card
-    sources = [
-      319,321,323,325,327,                     #石像
-    ]
     puts "自動進化："
-    cards = @user.find_cards_by_monsters(sources)
+    cards = @user.find_cards_by_monsters(@evolves)
     cards.each do |index, card|
       monster = card['monster']
       next if monster['level'].to_i != monster['maxLevel'].to_i
@@ -747,10 +834,7 @@ class Tos
   end
 
   def sell_card
-    sell_cards = [
-      486,487,488,489,490,                     #龍牙棋
-    ]
-    sourceCards = @user.find_cards_by_monsters(sell_cards)
+    sourceCards = @user.find_cards_by_monsters(@sells)
     return if sourceCards.count == 0
     puts '自動售卡：'
     targets = []
@@ -764,10 +848,19 @@ class Tos
     puts '======================================'
   end
 
+  def requires_exist(monsterIds)
+    cards = @user.find_cards_by_monsters_skill(monsterIds)
+    return false if cards.count == 0
+    cards.each do |index, card|
+      return true if @auto_merge_cards.include? card['monsterId'].to_i
+    end
+    return false
+  end
+
   def skill_card
     puts '自動練技能：'
     @train_skills.each do |train|
-      next if @user.find_cards_by_monsters_skill(train['requires']).count == 0
+      next unless requires_exist(train['requires'])
       loop do
         need_rerun = false
         sourceCards = @user.find_cards_by_monsters(train['sources'])
@@ -793,6 +886,7 @@ class Tos
         break if targetCards.count == 0
         targetCards.each do |index, card|
           next if card['cardId'] == sourceCard['cardId']
+          next if card['index'].to_i <= self.keep_index(card)
           need_rerun = true
           monster = card['monster']
           merge_card = @user.merge_card(sourceCard['cardId'], card['cardId'].split(','))
@@ -839,7 +933,7 @@ class Tos
     targetIds.delete(274) if @user.find_cards_by_monster(327).count > 0
     # 練技能
     @train_skills.each do |train|
-      next if @user.find_cards_by_monsters_skill(train['requires']).count == 0
+      next unless requires_exist(train['requires'])
       train['sources'].each do |id|
         targetIds.delete(id)
       end
@@ -882,6 +976,9 @@ class Tos
       merge_exp *= 1.5 if monster['groupId'].to_i != 0 and monster['groupId'] == sourceMonster['groupId']
       total_exp += merge_exp
       cardIds << card['cardId'].to_i
+    end
+    if cardIds.count < @auto_merge_min and (total_exp + sourceCard['exp'].to_i) < maxLevelExp
+      cardIds = []
     end
     #puts cardIds.join(',')
     cardIds
