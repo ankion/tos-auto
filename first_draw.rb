@@ -84,7 +84,7 @@ count.times do
   print_wait(1)
 ###############################################
   print 'user/team/save > '
-  user.team_save(0, '1,2,3,4,0')
+  user.team_save(0, "1,2,3,#{floor.loots.first['cardId']},0")
   print_wait(1)
 ###############################################
   floor = user.floor(user.find_floor_by(2))
@@ -103,12 +103,14 @@ count.times do
   print_wait(1)
 ###############################################
   print 'card/merge > '
-  user.merge_card(1, [5])
-  print_wait(1)
+  if floor.loots.count > 1
+    user.merge_card(1, [floor.loots.first['cardId']])
+    print_wait(1)
 ###############################################
-  print 'card/evolve > '
-  user.evolve_card(1, [6])
-  print_wait(1)
+    print 'card/evolve > '
+    user.evolve_card(1, [floor.loots.last['cardId']])
+    print_wait(1)
+  end
 ###############################################
   floor = user.floor(user.find_floor_by(3))
   print 'floor/helpers > '
