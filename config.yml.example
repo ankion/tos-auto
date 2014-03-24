@@ -9,8 +9,6 @@ defaults: &defaults
   sysInfo: ""
   platform: ""
   color_ui: false
-  auto_sell: false
-  sell_cards: []
   auto_merge: false
   merge_cards:
     base_merge:

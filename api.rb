@@ -226,36 +226,3 @@ end
 def is_blank(ob)
   return is_empty(ob) || ob.to_s.rstrip.size == 0
 end
-## each time to string refresh timestamp & hash ###########
-class TosUrl
-  attr_reader :path, :data, :acs_path, :acs_data
-  def initialize args
-    args.each do |k,v|
-      #puts "k:#{k} ,v:#{v}"
-      instance_variable_set("@#{k}", v) unless v.nil?
-    end
-  end
-  def to_s
-    encypt = Checksum.new
-    uri = Addressable::URI.new
-    tmp = @data
-    tmp[:timestamp]=Time.now.to_i
-    tmp[:nData]=encypt.getNData
-    salt = ''
-    if @path.include? 'user/login'
-      tmp[:olv] = eval(Base64.decode64(encypt.secret['get_olv1']))
-      salt = tmp[:deviceKey]
-    else
-      tmp[:olv] = eval(Base64.decode64(encypt.secret['get_olv2']))
-      salt = "#{tmp[:uid]}#{tmp[:session]}"
-    end
-    uri.query_values = tmp
-    rt = "#{@path}?#{uri.query}"
-    rt = "#{rt}&hash=#{encypt.getHash('base', rt, salt)}"
-    #puts "TosUrl.to_s - #{rt}"
-    return rt
-  end
-  def inspect
-    to_s
-  end
-end
