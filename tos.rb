@@ -13,11 +13,11 @@ class Tos
     print "".sup_color(color_ui == true).ul
     @user = User.new(Settings['uniqueKey'], Settings['deviceKey'])
     @auto_repeat = false
-    @auto_repeat_next = false
     @auto_enhance = Settings['auto_enhance'] || false
-    @merge_cards = Settings['merge_cards'] || []
     @last_zone = nil
-    @auto_merge_min = 5
+    @auto_sells = Settings['auto_sells'] || []
+    @auto_merge_min = Settings['auto_merge_min'] || 5
+    @auto_merge_keeps = Settings['auto_merge_keeps'] || {}
     @auto_merge_cards = Settings['auto_merge_cards'] || []
     @auto_merge_cards_targets = [
       86,87,88,89,90,91,92,93,94,95,           #小魔女
@@ -67,51 +67,6 @@ class Tos
       94 => 10,
       95 => 15,
     }
-    @merges_keep = {
-      #進化魂
-      241 => 2,
-      242 => 2,
-      243 => 2,
-      244 => 2,
-      245 => 2,
-      246 => 2,
-      247 => 2,
-      248 => 2,
-      249 => 2,
-      250 => 2,
-      251 => 2,
-      252 => 2,
-      253 => 2,
-      254 => 2,
-      255 => 2,
-      256 => 2,
-      257 => 2,
-      258 => 2,
-      259 => 2,
-      260 => 2,
-      #龍蛋
-      261 => 2,
-      262 => 2,
-      263 => 2,
-      #魔劍
-      264 => 2,
-      265 => 2,
-      266 => 2,
-      #西瓜
-      267 => 2,
-      268 => 2,
-      269 => 2,
-      #星靈
-      #379 => 1,
-      #380 => 1,
-      #381 => 1,
-      #382 => 1,
-      #383 => 1,
-      #384 => 1,
-    }
-    @sells = [
-      486,487,488,489,490,                     #龍牙棋
-    ]
     @evolves = [
       319,321,323,325,327,                     #石像
     ]
@@ -230,9 +185,6 @@ class Tos
     exit if choice_auto_repeat == 'q'
     if choice_auto_repeat == 'y'
       @auto_repeat = true
-      prompt = 'Auto play next floor?(y/N)'
-      choice_auto_repeat_next = Readline.readline(prompt, true)
-      @auto_repeat_next = true if choice_auto_repeat_next == 'y'
     end
     self.select_team
   end
@@ -663,7 +615,6 @@ class Tos
     self.auto_enhance_cards if @auto_enhance
 
     if @auto_repeat
-      #@floor.wave_floor = (@floor.wave_floor.to_i + 1).to_s if @auto_repeat_next
       print "Auto play again start at 5 sec."
       5.times do
         sleep 1.0
@@ -834,7 +785,7 @@ class Tos
   end
 
   def sell_card
-    sourceCards = @user.find_cards_by_monsters(@sells)
+    sourceCards = @user.find_cards_by_monsters(@auto_sells)
     return if sourceCards.count == 0
     puts '自動售卡：'
     targets = []
@@ -907,7 +858,7 @@ class Tos
   end
 
   def keep_index(card)
-    keep = @merges_keep[card['monster']['monsterId'].to_i]
+    keep = @auto_merge_keeps[card['monster']['monsterId'].to_i]
     return 0 unless keep
     keep
   end

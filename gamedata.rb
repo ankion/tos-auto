@@ -21,6 +21,7 @@ class GameData
       zone['name'] = attribute_color(zone['name'],index.to_i) if zone['name']
     end
     @floor_data = {}
+    @hidden_stages = [132,178,195]
     @bonus_type = {
       0 => 'NONE',
       1 => '體力消耗減 50%',
@@ -163,6 +164,7 @@ class GameData
     stages = {}
     res_json['data']['stageList'].each do |stage|
       stage_data = stage.split('|')
+      next if @hidden_stages.include? stage_data[0].to_i
       stages[stage_data[0].to_i] = {
         'id' => stage_data[0],
         'zoneId' => stage_data[3],
@@ -173,11 +175,13 @@ class GameData
       }
     end
     stageBonus_data['stages'].each do |bonus|
+      next unless stages[bonus['stageId'].to_i]
       bonus['bonusType_s'] = self.bonus_type bonus['bonusType']
       stages[bonus['stageId'].to_i]['bonus'] = bonus
     end
     res_json['data']['floorList'].each do |floor|
       floor_data = floor.split('|')
+      next unless stages[floor_data[1].to_i]
       stage = stages[floor_data[1].to_i]
       stamina = floor_data[4].to_i
       stamina = (stamina / 2.0).round if stage['bonus'] and stage['bonus']['bonusType'].to_i == 1
