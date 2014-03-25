@@ -37,6 +37,7 @@ class User
       "completedFloorIds" => nil,
       "completedStageIds" => nil,
       "items" => nil,
+      "lockedFloorIds" => nil,
     }
     @game_data = GameData.new
     @current_floor = nil
@@ -125,6 +126,10 @@ class User
     @game_data.update_monster(res_json)
     self.update_cards(res_json)
     @game_data.update_floors(res_json, @data['guildId'].to_i != 0)
+  end
+
+  def floor_locked(id)
+    @data['lockedFloorIds'].include? id.to_i
   end
 
   def floors

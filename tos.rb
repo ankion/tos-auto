@@ -556,7 +556,9 @@ class Tos
     floors = stages[choice_stage.to_i]['floors']
 
     floors.each do |index, floor|
-      puts "[%3d]%s %2d %s" % [floor['id'],((@user.data['completedFloorIds'].include? floor['id'].to_i) ? 'v' : ' ').bold.green,floor['stamina'],floor['name']]
+      complete_flag = ((@user.data['completedFloorIds'].include? floor['id'].to_i) ? 'v' : ' ').bold.green
+      complete_flag = ('X').bold.red if @user.floor_locked(floor['id'])
+      puts "[%3d]%s %2d %s" % [floor['id'], complete_flag,floor['stamina'],floor['name']]
       last_floor = floor['id'] unless last_floor
       last_floor = nil if @user.data['completedFloorIds'].include? floor['id'].to_i
       last_floor = floor['id'] if floor['id'].to_i == floors.keys.last and last_floor == nil
