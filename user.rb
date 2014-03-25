@@ -448,4 +448,13 @@ class User
     end
     cards
   end
+
+  def guild_chat
+    get_data = {
+      'guildId' => @data['guildId'],
+      'retry' => '1'
+    }
+    toshttp = TosHttp.new(@data)
+    res_json = toshttp.post("/api/guild/chat", get_data)
+  end
 end
