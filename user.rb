@@ -121,7 +121,7 @@ class User
       'sysInfo' => Settings['sysInfo'],
     }
     get_data['deviceName'] = Settings['deviceName'] if Settings['deviceName']
-    get_data['loginToken'] = Settings['loginToken'] if Settings['loginToken']
+    get_data['loginToken'] = Settings['loginToken'] if Settings['loginToken'] and Settings['loginType'] == 'twitter'
 
     toshttp = TosHttp.new(@data)
     res_json = toshttp.post("/api/user/login", get_data)
