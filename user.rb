@@ -115,11 +115,14 @@ class User
 
   def login
     get_data = {
-      'type' => 'device',
+      'type' => (Settings['loginType'] || 'device'),
       'uniqueKey' => @uniqueKey,
       'deviceKey' => @deviceKey,
       'sysInfo' => Settings['sysInfo'],
     }
+    get_data['deviceName'] = Settings['deviceName'] if Settings['deviceName']
+    get_data['loginToken'] = Settings['loginToken'] if Settings['loginToken']
+
     toshttp = TosHttp.new(@data)
     res_json = toshttp.post("/api/user/login", get_data)
     self.update_data(res_json)

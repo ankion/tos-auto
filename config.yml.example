@@ -6,6 +6,11 @@ defaults: &defaults
   tos_secret:
   uniqueKey: ""
   deviceKey: ""
+  ### Required facebook or twitter ###
+  #loginType: "facebook"
+  #deviceName: ""
+  #loginToken: ""
+  ####################################
   sysInfo: ""
   platform: ""
   color_ui: false
