@@ -369,7 +369,7 @@ class Floor
           end
           #puts "recover:#{wave_recover} hp:#{wave_hp} combo:#{wave_combo} attack:#{wave_attack}"
           enemy_damage = wave_attack - enemy_defense
-          enemy_damage = 1 if enemy_damage < 1
+          enemy_damage = 6 if enemy_damage < 1
           totalDamageToEnemy += enemy_damage.to_i
           totalDamageCountToEnemy += 1
           if minDamageToEnemy == 0
