@@ -27,7 +27,7 @@ require "./checksum"
 ## override String #######################################
 class String
   $sup_color = false #static
-  def sup_color(ok=true) 
+  def sup_color(ok=true)
     $sup_color = ok == true
     self
   end
@@ -225,29 +225,4 @@ end
 ## check is null or blank("  ") string #####################
 def is_blank(ob)
   return is_empty(ob) || ob.to_s.rstrip.size == 0
-end
-## each time to string refresh timestamp & hash ###########
-class TosUrl
-  attr_reader :path, :data, :acs_path, :acs_data
-  def initialize args
-    args.each do |k,v|
-      #puts "k:#{k} ,v:#{v}"
-      instance_variable_set("@#{k}", v) unless v.nil?
-    end
-  end
-  def to_s
-    encypt = Checksum.new
-    uri = Addressable::URI.new
-    tmp = @data
-    tmp[:timestamp]=Time.now.to_i
-    tmp[:nData]=encypt.getNData
-    uri.query_values = data
-    rt = "#{@path}?#{uri.query}"
-    rt = "#{rt}&hash=#{encypt.getHash(rt, '')}"
-    #puts "TosUrl.to_s - #{rt}"
-    return rt
-  end
-  def inspect
-    to_s
-  end
 end

@@ -1,22 +1,62 @@
 # config.yml
 defaults: &defaults
-  color_ui: false
+  tos_version: "4.62"
   tos_url: ""
   tos_key: ""
+  tos_secret:
   uniqueKey: ""
   deviceKey: ""
+  ### Required facebook or twitter ###
+  #loginType: "facebook"
+  #deviceName: ""
+  #loginToken: ""
+  ####################################
   sysInfo: ""
   platform: ""
-  auto_sell: false
-  sell_cards: []
-  auto_merge: false
-  merge_cards:
-    base_merge:
-      target_cards: [56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115]
-      source_cards: [86,87,88,89,90,91,92,93,94,95]
-      stop_at_lv_max: true
-      stop_at_cd_max: false
-      require_target_lv: 0
-      require_target_cd: 0
-      require_target_amount_min: 1
-      require_target_amount_max: 5
+  color_ui: false
+  auto_enhance: false
+  auto_sells: [486,487,488,489,490] #龍牙棋
+  auto_train_skills: false
+  auto_merge_min: 5
+  auto_merge_keeps:
+      #進化魂
+      241: 2
+      242: 2
+      243: 2
+      244: 2
+      245: 2
+      246: 2
+      247: 2
+      248: 2
+      249: 2
+      250: 2
+      251: 2
+      252: 2
+      253: 2
+      254: 2
+      255: 2
+      256: 2
+      257: 2
+      258: 2
+      259: 2
+      260: 2
+      #龍蛋
+      261: 2
+      262: 2
+      263: 2
+      #魔劍
+      264: 2
+      265: 2
+      266: 2
+      #西瓜
+      267: 2
+      268: 2
+      269: 2
+      #星靈
+      379: 1
+      380: 1
+      381: 1
+      382: 1
+      383: 1
+      384: 1
+  auto_merge_cards: []

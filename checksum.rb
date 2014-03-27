@@ -1,5 +1,6 @@
 # -*- encoding : utf-8 -*-
 require 'digest/md5'
+require "base64"
 require './setting'
 
 class Checksum
@@ -7,10 +8,12 @@ class Checksum
     Settings['tos_key']
   end
 
-  def getHash(input, salt = '')
-    str = "#{key}#{salt}"
-    str2 = Digest::MD5.hexdigest(input)[8..11]
-    return Digest::MD5.hexdigest("#{str2}#{str}")
+  def secret
+    Settings['tos_secret'] || {}
+  end
+
+  def getHash(type, input, salt = '')
+    eval Base64.decode64(secret[type]) if secret[type]
   end
 
   def getNData

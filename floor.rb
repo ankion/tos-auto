@@ -4,131 +4,326 @@ require './api'
 require './checksum'
 
 class Floor
-  attr_accessor :zones, :stages, :floors, :wave_team, :wave_team_data, :wave_floor, :wave_helper, :waves_data, :wave_fail, :finish_data, :acs_data, :ext_acs_data, :stage_bonus, :bonus_type
+  attr_accessor :helpers, :choice_helper, :waves, :is_mission
 
-  def initialize
-    @zones = {
-      '1' => {:name => '寒霜冰川', :requireFloor => 8},
-      '2' => {:name => '熾熱荒土', :requireFloor => 11},
-      '3' => {:name => '神木森林', :requireFloor => 14},
-      '4' => {:name => '聖光之城', :requireFloor => 17},
-      '5' => {:name => '暗夜深淵', :requireFloor => 20},
-      '6' => {:name => '以諾塔'},
-      '7' => {:name => '古神遺跡', :requireFloor => 23},
-      '8' => {:name => '旅人的記憶', :requireFloor => 88},
-      '9' => {:name => '布蘭克洞窟'}
-    }
-    @zones.each do |index, z|
-      #puts "zones %s %s" % [index,z]
-      z[:name] = attribute_color(z[:name],index.to_i) if z[:name]
-    end
-    @bonus_type = {
-      0 => 'NONE',
-      1 => '體力消耗減 50%',
-      2 => '封印卡掉落率 200%',
-      3 => 'Exp 獲得量 200%',
-      4 => 'RARE_APPEAR',
-      5 => '碎片掉落 200%',
-      6 => 'REWARD',
-      7 => 'ALERT'
-    }
-    @one_time_floors = [222, 488]
-    @one_time_stages = [63, 150, 132, 178]
-    @stages = []
-    @floors = []
-    @waves_data = nil
-    @wave_team = nil
-    @wave_team_data = nil
-    @wave_floor = nil
-    @wave_helper = nil
-    @wave_fail = false
-    @finish_data = nil
+  def initialize(game_data, user, floor_data, team)
+    @game_data = game_data
+    @user = user
+    @user_data = @user.data
+    @floor_data = floor_data
+    @floorId = @floor_data['id']
+    @toshttp = TosHttp.new(@user_data)
+    @helpers = nil
+    @choice_helper = nil
+    @team = team
+    @waves = nil
+    @floorHash = nil
+    @get_data = nil
     @acs_data = nil
     @ext_acs_data = nil
-    #@max_round = 100
-    @stage_bonus = nil
+    @complete_data = nil
+    @is_mission = false
   end
 
-  def one_time_floor?
-    @one_time_floors.include? @wave_floor.to_i
+  def helper
+    return nil unless @choice_helper
+    @helpers[@choice_helper]
   end
 
-  def one_time_stage?(stage)
-    @one_time_stages.include? stage.to_i
-  end
-
-  def reset_complete
-    @finish_data = {
-      :floorId => @wave_floor,
-      :team => @wave_team,
-      :floorHash => @waves_data['floorHash'],
-      :helper_uid => @wave_helper[:uid],
-      :waves => @waves_data['waves'].length,
-      :maxAttack => 0,
-      :maxCombo => 0,
-      :minLoad => 43.73095703125 + rand(50),
-      :maxLoad => 3965.69897460938 + rand(5000),
-      :avgLoad => 1327.46998355263 + rand(500),
-      :bootTime => 27418.5180664063 + rand(50000)
+  def get_helpers
+    get_data = {
+      'floorId' => @floorId
     }
+    res_json = @toshttp.post("/api/floor/helpers", get_data)
+    @helpers = []
+    res_json['data']['alluserList'].each do |helper|
+      user = helper.split('|')
+      guild = (user[17]) ? (user[17].split('#'))[6] : nil
+      data = {
+        'uid' => user[0],
+        'name' => user[1],
+        'loginTime' => user[2],
+        'level' => user[3],
+        'cardId' => user[7],
+        'monsterId' => user[8],
+        'monsterLevel' => user[10],
+        'monster' => @game_data.monster(user[8], user[10], user[11]),
+        'skillLevel' => user[11],
+        'friendPoint' => user[13].to_i || 0,
+        'guild' => guild,
+        'clientHelperCard' => "#{user[7..11].join('|')}|0|0",
+      }
+      @helpers << data
+    end
+  end
+
+  def enter
+    get_data = {
+      'floorId' => @floorId,
+      'team' => @team['teamId']
+    }
+    if @choice_helper
+      get_data['helperUid'] = self.helper['uid']
+      get_data['clientHelperCard'] = self.helper['clientHelperCard']
+    end
+    get_data['isMission'] = 'true' if @is_mission
+    res_json = @toshttp.post("/api/floor/enter", get_data)
+    update_waves(res_json)
+  end
+
+  def update_waves(res_json)
+    @floorHash = res_json['data']['floorHash']
+    @waves = []
+    res_json['data']['waves'].each do |enemies|
+      wave = []
+      enemies.each do |enemy_data|
+        enemy_data[1].each do |enemy|
+          enemy['monster'] = @game_data.monster(enemy['monsterId'], enemy['level'], 1, enemy['extras'])
+          if enemy['lootItem']
+            case enemy['lootItem']['type']
+            when 'monster'
+              card = enemy['lootItem']['card']
+              monster = @game_data.monster(card['monsterId'], card['level'])
+              enemy['lootItem_s'] = "lv%d %s" % [monster['level'], monster['monsterName']]
+            when 'money'
+              enemy['lootItem_s'] = "#{enemy['lootItem']['amount']} 金"
+            when 'item'
+              enemy['lootItem_s'] = @game_data.item(enemy['lootItem']['itemId'])
+            end
+          end
+          wave << enemy
+        end
+      end
+      @waves << wave
+    end
+  end
+
+  def delay_time
+    @acs_data['e']
+  end
+
+  def fight
+    set_base_get_data
+    set_base_acs_data
+    calculate_data
+  end
+
+  def complete
+    encypt = Checksum.new
+
+    get_data = @get_data.merge(@acs_data)
+    get_data['acsh'] = encypt.getHash('acsh', @ext_acs_data['acs'], '')
+    res_json = @toshttp.post("/api/floor/complete", get_data, @ext_acs_data)
+    @user.update_data(res_json)
+    @user.update_cards(res_json)
+    @complete_data = res_json['data']
+  end
+
+  def loots
+    loots = []
+    if @complete_data['loots']
+      @complete_data['loots'].each do |loot|
+        next unless loot['type'] == 'monster'
+        card = loot['card']
+        card['monster'] = @game_data.monster(card['monsterId'], card['level'], card['skillLevel'])
+        loots << card
+      end
+    end
+    loots
+  end
+
+  def loot_items
+    loots = []
+    if @complete_data['loots']
+      @complete_data['loots'].each do |loot|
+        next unless loot['type'] == 'item'
+        item = loot
+        item['itemName'] = @game_data.item(item['itemId'])
+        loots << item
+      end
+    end
+    loots
+  end
+
+  def gains
+    {
+      'friendpoint' => @complete_data['friendpoint'],
+      'expGain' => @complete_data['expGain'],
+      'coinGain' => @complete_data['coinGain'],
+      'guildExpContribute' => @complete_data['guildExpContribute'],
+      'guildExpBonus' => @complete_data['guildExpBonus'],
+      'guildCoinBonus' => @complete_data['guildCoinBonus'],
+      'diamonds' => @complete_data['diamonds'],
+    }
+  end
+
+  def get_team_monster_data
+    data_string = ''
+    (0..4).each do |index|
+      if @team['teams'][index]
+        monster = @team['teams'][index]['monster']
+        data_string += "%s|%s|%s|%s|%s|%s," % [
+           monster['attack'].to_s,
+           monster['recover'].to_s,
+           monster['leaderSkill'].to_s,
+           monster['normalSkill']['skillId'].to_s,
+           monster['coolDown'].to_s,
+           monster['skillLevel'].to_s
+        ]
+      else
+        data_string += "0|0|0|0|0|0,"
+      end
+    end
+    if self.helper
+      monster = self.helper['monster']
+      data_string += "%s|%s|%s|%s|%s|%s" % [
+         monster['attack'].to_s,
+         monster['recover'].to_s,
+         monster['leaderSkill'].to_s,
+         monster['normalSkill']['skillId'].to_s,
+         monster['coolDown'].to_s,
+         monster['skillLevel'].to_s
+      ]
+    else
+      data_string += "0|0|0|0|0|0"
+    end
+  end
+
+  def get_team_data
+    data_string = ''
+    (0..4).each do |index|
+      if @team['teams'][index]
+        monster = @team['teams'][index]['monster']
+        data_string += "%s|%s|%s|%s|%s|%s," % [
+          @team['teams'][index]['cardId'].to_s,
+          monster['monsterId'].to_s,
+          monster['attack'].to_s,
+          monster['recover'].to_s,
+          monster['HP'].to_s,
+          monster['skillLevel'].to_s
+        ]
+      else
+        data_string += "0|0|0|0|0|0,"
+      end
+    end
+    if self.helper
+      monster = self.helper['monster']
+      data_string += "%s|%s|%s|%s|%s|%s" % [
+        self.helper['cardId'].to_s,
+        monster['monsterId'].to_s,
+        monster['attack'].to_s,
+        monster['recover'].to_s,
+        monster['HP'].to_s,
+        monster['skillLevel'].to_s
+      ]
+    else
+      data_string += "0|0|0|0|0|0"
+    end
+  end
+
+  def get_team_size
+    total_size = 0
+    @team['teams'].each do |card|
+      monster = card['monster']
+      total_size += monster['size'].to_i
+    end
+    total_size
+  end
+
+  def get_team_list
+    team_list = []
+    (0..4).each do |index|
+      if @team['teams'][index]
+        monster = @team['teams'][index]['monster']
+        team = {
+          "monsterId" => monster['monsterId'],
+          "monsterLevel" => monster['level'],
+          "attackCount" => 0
+        }
+      else
+        team = {
+          "monsterId" => 0,
+          "monsterLevel" => 0,
+          "attackCount" => 0
+        }
+      end
+      team_list << team
+    end
+    team_list
+  end
+
+  def set_base_get_data
+    @get_data = {
+      'floorId' => @floorId,
+      'team' => @team['teamId'],
+      'floorHash' => @floorHash,
+      'waves' => @waves.length,
+      'maxAttack' => 0,
+      'maxCombo' => 0,
+      'minLoad' => 43.73095703125 + rand(50),
+      'maxLoad' => 3965.69897460938 + rand(5000),
+      'avgLoad' => 1327.46998355263 + rand(500),
+      'bootTime' => 27418.5180664063 + rand(50000)
+    }
+    @get_data['helper_uid'] = self.helper['uid'] if @choice_helper
+  end
+
+  def set_base_acs_data
     @acs_data = {
       # Game.runtimeData.eatGemRound
-      :a => 0,
+      'a' => 0,
       # Game.runtimeData.waveMovedTime
-      :b => 0,
+      'b' => 0,
       # Game.runtimeData.SkillUsedTime
-      :c => "#{rand(1)},#{rand(1)},#{rand(1)},#{rand(1)},#{rand(1)},#{rand(1)}",
+      'c' => "#{rand(1)},#{rand(1)},#{rand(1)},#{rand(1)},#{rand(1)},#{rand(1)}",
       # Game.runtimeData.retryTime
-      :d => 0,
+      'd' => 0,
       # Game.runtimeData.gameplayTime
-      :e => 0,
+      'e' => 0,
       # Game.runtimeData.numOfwave
-      :f => @waves_data['waves'].length,
+      'f' => @waves.length,
       # Game.runtimeData.monsterNum
-      :g => 6,
+      'g' => 6,
       # Game.runtimeData.dieTime
-      :h => 0,
+      'h' => 0,
       # Game.runtimeData.monsterAttackTime
-      :i => 0,
+      'i' => 0,
       #
-      :j => 1,
+      'j' => 1,
       # Game.runtimeData.minHP
-      :k => 0,
+      'k' => 0,
       # Game.runtimeData.maxHP
-      :l => 0,
+      'l' => 0,
       #
-      :n => nil,
+      'n' => nil,
       # Game.runtimeData.minDamageTaken
-      :o => 0,
+      'o' => 0,
       # Game.runtimeData.maxDamageTaken
-      :p => 0,
+      'p' => 0,
       # Game.runtimeData.totalDamageTaken
-      :r => 0,
+      'r' => 0,
       # Game.runtimeData.gamePlayError
-      :s => 0,
+      's' => 0,
       # Game.runtimeData.restoreCount
-      :t => 1,
+      't' => 1,
       # Game.runtimeData.maxRecoverHP
-      :u => 0,
+      'u' => 0,
       # Game.runtimeData.minRecoverHP
-      :v => 0,
+      'v' => 0,
       # Game.runtimeData.totalRecoverHP
-      :w => 0,
+      'w' => 0,
       # BootLoader.upTime
-      :x => 100 + rand(500)
+      'x' => 100 + rand(500)
     }
     @ext_acs_data = {}
   end
 
-  def set_complete(user)
-    reset_complete
-    team_hp = user.get_team_hp(@wave_team_data, @wave_helper)
-    team_attack = user.get_team_attack(@wave_team_data, @wave_helper)
-    team_recover = user.get_team_recover(@wave_team_data, @wave_helper)
-    #puts "current hp:#{team_hp} attack:#{team_attack} recover:#{team_recover}"
-    @acs_data[:l] = team_hp
-    @acs_data[:k] = team_hp
-    @wave_fail = false
+  def calculate_data
+    team_hp = @team['hp']
+    team_attack = @team['attack']
+    team_recover = @team['recover']
+    @acs_data['l'] = team_hp
+    @acs_data['k'] = team_hp
     enemyAttackCountPerWave_array = []
     enemyDamageTakenPerWave_array = []
     maxDamageTakenPerWave_array = []
@@ -136,17 +331,17 @@ class Floor
     minPlayerHPPerWave_array = []
     maxPlayerAttackPerWave_array = []
     maxAttackPerRoundDuringBossWave = 0
+    totalDamageToEnemy = 0
+    minDamageToEnemy = 0
+    maxDamageToEnemy = 0
+    totalDamageCountToEnemy = 0
     baseCombo = 8
     maxCombo = rand(6) + 1
-    puts "Monster list"
-    @waves_data['waves'].each_index do |index|
-      puts "第 #{index + 1} 波"
-      #puts waves[index]['enemies'].inspect
+    @waves.each do |wave|
       enemy_hp = 0
       enemy_attack = 0
 
       wave_hp = team_hp
-      #@acs_data[:g] += @waves_data['waves'][index]['enemies'].length
       enemyAttackCountPerWave = 0
       enemyDamageTakenPerWave = 0
       maxDamageTakenPerWave = 0
@@ -154,45 +349,45 @@ class Floor
       minPlayerHPPerWave = wave_hp
       maxPlayerAttackPerWave = 0
 
-      @waves_data['waves'][index]['enemies'].each do |e|
-        #break if @acs_data[:a] > @max_round
-        monster = user.monster.data[e['monsterId'].to_s]
-        enemy_hp = monster[:minEnemyHP].to_i + (monster[:incEnemyHP].to_i * e['level'].to_i)
-        enemy_attack = monster[:minEnemyAttack].to_i + (monster[:incEnemyAttack].to_i * e['level'].to_i)
-        enemy_defense = monster[:minEnemyDefense].to_i + (monster[:incEnemyDefense].to_i * e['level'].to_i)
+      wave.each do |enemy|
+        monster = enemy['monster']
+        enemy_hp = monster['enemyHP'].to_i
+        enemy_attack = monster['enemyAttack'].to_i
+        enemy_defense = monster['enemyDefense'].to_i
 
-        #puts e.inspect
-        puts "\tlv%3d %s" % [e['level'],monster[:monsterName]]
-        if e['lootItem']
-          loot = e['lootItem']
-          prefix = "戰勵品：".bg_blue.yellow.bold
-          begin
-            puts "\t#{prefix} lv%d %s" % [loot['card']['level'],user.monster.data[loot['card']['monsterId'].to_s][:monsterName]] if loot['type'] == 'monster'
-            puts "\t#{prefix} #{loot['amount']} 金" if loot['type'] == 'money'
-          rescue
-            puts "\t#{loot}"
-          end
-        end
-        #puts "enemy_hp:#{enemy_hp} enemy_attack:#{enemy_attack}"
         loop do
-          #break if @acs_data[:a] > @max_round
-          @acs_data[:a] += 1
+          @acs_data['a'] += 1
           wave_recover = team_hp - wave_hp
           wave_hp = team_hp
           wave_combo = baseCombo + rand(maxCombo)
           wave_attack = team_attack * ((1 + rand(5)) + (wave_combo * 0.3))
           wave_attack *= (1 + rand(5))
+          # "BOSS_DESC_2", "召喚師完全回復生命力後，剩餘的回復力會轉化為攻擊力"
+          if enemy['characteristic'].to_i == 2
+            wave_attack = team_recover * ((1 + rand(5)) + (wave_combo * 0.3))
+            wave_attack *= (1 + rand(5))
+          end
           #puts "recover:#{wave_recover} hp:#{wave_hp} combo:#{wave_combo} attack:#{wave_attack}"
           enemy_damage = wave_attack - enemy_defense
-          enemy_damage = 1 if enemy_damage < 1
-          @finish_data[:maxCombo] = wave_combo if @finish_data[:maxCombo] < wave_combo
+          enemy_damage = 6 if enemy_damage < 1
+          totalDamageToEnemy += enemy_damage.to_i
+          totalDamageCountToEnemy += 1
+          if minDamageToEnemy == 0
+            minDamageToEnemy = enemy_damage.to_i
+            maxDamageToEnemy = enemy_damage.to_i
+          else
+            minDamageToEnemy = enemy_damage.to_i if minDamageToEnemy > enemy_damage
+            maxDamageToEnemy = enemy_damage.to_i if maxDamageToEnemy < enemy_damage
+          end
+
+          @get_data['maxCombo'] = wave_combo if @get_data['maxCombo'] < wave_combo
           maxComboPerWave = wave_combo if maxComboPerWave < wave_combo
-          @finish_data[:maxAttack] = enemy_damage.to_i if @finish_data[:maxAttack] < enemy_damage
+          @get_data['maxAttack'] = enemy_damage.to_i if @get_data['maxAttack'] < enemy_damage
           maxPlayerAttackPerWave = enemy_damage.to_i if maxPlayerAttackPerWave < enemy_damage
           if wave_recover > 0
-            @acs_data[:u] = wave_recover if @acs_data[:u] < wave_recover
-            @acs_data[:v] = wave_recover if @acs_data[:v] > wave_recover or @acs_data[:v] == 0
-            @acs_data[:w] += wave_recover
+            @acs_data['u'] = wave_recover if @acs_data['u'] < wave_recover
+            @acs_data['v'] = wave_recover if @acs_data['v'] > wave_recover or @acs_data['v'] == 0
+            @acs_data['w'] += wave_recover
           end
           enemy_hp -= enemy_damage
           break if enemy_hp < 1
@@ -200,26 +395,19 @@ class Floor
             wave_hp -= enemy_attack
             wave_hp = rand(100) + 1 if wave_hp < 1
             wave_damage = team_hp - wave_hp
-            @acs_data[:k] = wave_hp if @acs_data[:k] > wave_hp
+            @acs_data['k'] = wave_hp if @acs_data['k'] > wave_hp
             minPlayerHPPerWave = wave_hp if minPlayerHPPerWave > wave_hp
-            @acs_data[:r] += wave_damage
+            @acs_data['r'] += wave_damage
             enemyDamageTakenPerWave += wave_damage
-            @acs_data[:p] = wave_damage if @acs_data[:p] < wave_damage
+            @acs_data['p'] = wave_damage if @acs_data['p'] < wave_damage
             maxDamageTakenPerWave = wave_damage if maxDamageTakenPerWave < wave_damage
-            @acs_data[:o] = wave_damage if @acs_data[:o] > wave_damage or @acs_data[:o] == 0
-            @acs_data[:i] += 1
+            @acs_data['o'] = wave_damage if @acs_data['o'] > wave_damage or @acs_data['o'] == 0
+            @acs_data['i'] += 1
             enemyAttackCountPerWave += 1
           end
         end
       end
-      #if @acs_data[:a] > @max_round
-        #puts 'This wave is fail.'
-        #@acs_data[:h] += 1
-        #@acs_data[:k] = 0
-        #@wave_fail = true
-        #break
-      #end
-      @acs_data[:b] += 1
+      @acs_data['b'] += 1
       enemyAttackCountPerWave_array << enemyAttackCountPerWave
       enemyDamageTakenPerWave_array << enemyDamageTakenPerWave
       maxDamageTakenPerWave_array << maxDamageTakenPerWave
@@ -227,9 +415,9 @@ class Floor
       minPlayerHPPerWave_array << minPlayerHPPerWave
       maxPlayerAttackPerWave_array << maxPlayerAttackPerWave
       maxAttackPerRoundDuringBossWave = maxPlayerAttackPerWave
-      maxAttackPerRoundDuringBossWave = 0 if @acs_data[:b] != @acs_data[:f]
+      maxAttackPerRoundDuringBossWave = 0 if @acs_data['b'] != @acs_data['f']
     end
-    (@acs_data[:f] - @acs_data[:b]).times do
+    (@acs_data['f'] - @acs_data['b']).times do
       enemyAttackCountPerWave_array << 0
       enemyDamageTakenPerWave_array << 0
       maxDamageTakenPerWave_array << 0
@@ -239,12 +427,12 @@ class Floor
     end
     @ext_acs_data['y'] = enemyAttackCountPerWave_array.join(',')
     @ext_acs_data['z'] = enemyDamageTakenPerWave_array.join(',')
-    @ext_acs_data['aa'] = user.get_team_data(@wave_team_data, @wave_helper)
+    @ext_acs_data['aa'] = self.get_team_data
     @ext_acs_data['ab'] = maxDamageTakenPerWave_array.join(',')
     @ext_acs_data['ac'] = maxComboPerWave_array.join(',')
     @ext_acs_data['ad'] = minPlayerHPPerWave_array.join(',')
     @ext_acs_data['ae'] = maxPlayerAttackPerWave_array.join(',')
-    @ext_acs_data['af'] = user.get_team_monster_data(@wave_team_data, @wave_helper)
+    @ext_acs_data['af'] = self.get_team_monster_data
     @ext_acs_data['ag'] = 'null'
     @ext_acs_data['ah'] = 'null'
     @ext_acs_data['ai'] = 'null'
@@ -252,161 +440,84 @@ class Floor
     @ext_acs_data['ak'] = 0
     @ext_acs_data['al'] = 0
     @ext_acs_data['am'] = maxAttackPerRoundDuringBossWave
-    temp_acs_data = @acs_data
-    temp_acs_data[:y] = enemyAttackCountPerWave_array.join(',')
-    temp_acs_data[:z] = enemyDamageTakenPerWave_array.join(',')
-    temp_acs_data[:aa] = user.get_team_data(@wave_team_data, @wave_helper)
-    temp_acs_data[:ab] = maxDamageTakenPerWave_array.join(',')
-    temp_acs_data[:ac] = maxComboPerWave_array.join(',')
-    temp_acs_data[:ad] = minPlayerHPPerWave_array.join(',')
-    temp_acs_data[:ae] = maxPlayerAttackPerWave_array.join(',')
-    temp_acs_data[:af] = user.get_team_monster_data(@wave_team_data, @wave_helper)
-    temp_acs_data[:ag] = 'null'
-    temp_acs_data[:ah] = 'null'
-    temp_acs_data[:ai] = 'null'
-    temp_acs_data[:aj] = 'null'
-    temp_acs_data[:ak] = 0
-    temp_acs_data[:al] = 0
-    temp_acs_data[:am] = maxAttackPerRoundDuringBossWave
-    @ext_acs_data[:acs] = temp_acs_data.to_json
-    floor_data = @floors.select {|k| k[:id] == @wave_floor}
-    #puts "floor:#{floor_data.first[:name]}"
-    #if floor_data.first[:name].include? '地獄級'
-      #puts 'Hell level!!!!!'
-      #@acs_data[:d] += 1 + rand(5)
-      #@acs_data[:h] = @acs_data[:d]
-      #@acs_data[:c] = "#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)},#{rand(5)}"
-    #end
+    temp_acs_data = @acs_data.merge @ext_acs_data
+    @ext_acs_data['acs'] = temp_acs_data.to_json
+    gamePlayData = {
+      "stage" => {
+        "stageType" => "NORMAL",
+        "stageID" => @floor_data['stageId'],
+        "stageZone" => @game_data.floors[@floor_data['zoneId'].to_i]['scene']
+      },
+      "floor" => {
+        "staminaCost" => @floor_data['stamina']
+      },
+      "user" => {
+        "staminaBeforeBattle" => @user_data['currentStamina'].to_i - @floor_data['stamina'].to_i,
+        "staminaAfterBattle" => @user_data['currentStamina']
+      },
+      "team" => {
+        "maxHP" => @acs_data['k'],
+        "maxRecover" => @acs_data['u'],
+        "endHP" => @acs_data['l'],
+        "teamSize" => self.get_team_size,
+        "teamList" => self.get_team_list,
+        "totalDamageByEnemy" => @acs_data['r'],
+        "totalDamageCountByEnemy" => @acs_data['i'],
+        "minDamageByEnemy" => @acs_data['o'],
+        "maxDamageByEnemy" => @acs_data['p'],
+        "totalDamageToEnemy" => totalDamageToEnemy,
+        "totalDamageCountToEnemy" => totalDamageCountToEnemy,
+        "minDamageToEnemy" => minDamageToEnemy,
+        "maxDamageToEnemy" => maxDamageToEnemy,
+        "maxAttackPerRoundDuringBossWave" => maxAttackPerRoundDuringBossWave
+      }
+    }
+    gamePlayData['team']["helperUid"] = self.helper['uid'] if self.helper
+    @ext_acs_data['gamePlayData'] = gamePlayData.to_json
+    sysinfo = Settings['sysInfo'].split('|')
+    systemInfo = {
+      "appVersion" => Settings['tos_version'],
+      "deviceModel" => "Motorola MB525",
+      "deviceType" => "Handheld",
+      "deviceUniqueIdentifier" => Settings['deviceKey'],
+      "operatingSystem" => sysinfo[0],
+      "systemVersion" => "2.3.7",
+      "processorType" => sysinfo[1],
+      "processorCount" => sysinfo[2],
+      "systemMemorySize" => sysinfo[3],
+      "graphicsMemorySize" => sysinfo[4],
+      "graphicsDeviceName" => sysinfo[5],
+      "graphicsDeviceVendor" => "Imagination Technologies",
+      "graphicsDeviceVersion" => sysinfo[7],
+      "emua" => "FALSE",
+      "emub" => "FALSE",
+      "npotSupport" => sysinfo[8],
+      "supportsAccelerometer" => "True",
+      "supportsGyroscope" => "False",
+      "supportsLocationService" => "True",
+      "supportsVibration" => "True",
+      "maxTextureSize" => sysinfo[10],
+      "screenWidth" => "480",
+      "screenHeight" => "854",
+      "screenDPI" => "264.7876",
+      "IDFA" => "",
+      "IDFV" => "",
+      "MAC" => sysinfo[14],
+      "networkType" => "WIFI"
+    }
+    @ext_acs_data['systemInfo'] = systemInfo.to_json
+
     base_time = (6 + rand(3))
     bonus_time = 1
-    bonus_time += 1 if @acs_data[:a] > 20
-    bonus_time += 1 if @acs_data[:a] > 40
+    bonus_time += 1 if @acs_data['a'] > 20
 
     if Settings['fast_mode']
       base_time = 3
       bonus_time = 1
     end
 
-    @acs_data[:e] = (Time.now + ((base_time * (@acs_data[:a] + @acs_data[:d]) ) * bonus_time)) - Time.now
+    @acs_data['e'] = (Time.now + ((base_time * (@acs_data['a'] + @acs_data['d']) ) * bonus_time)) - Time.now
 
-    @acs_data[:e] = 25.0 if @acs_data[:e] < 25.0
-    #loop do
-      #break if @acs_data[:e] < 1200
-      #@acs_data[:e] -= 100
-    #end
-    puts "floorId:#{@wave_floor}"
-    puts "maxAttack:#{@finish_data[:maxAttack]} maxCombo:#{@finish_data[:maxCombo]}"
-    puts "round:#{@acs_data[:a]} retry:#{@acs_data[:d]} die:#{@acs_data[:h]}"
-    puts "monsterAttackTime:#{@acs_data[:i]} totalDamage:#{@acs_data[:r]}"
-    #puts @acs_data.inspect
-  end
-
-  def parse_floor_data(data)
-    data['stageList'].each do |s|
-      stage = s.split('|')
-      @stages << {:id => stage[0], :zone => stage[3], :name => stage[9], :start_at => stage[7], :end_at => stage[8]}
-    end
-    data['floorList'].each do |f|
-      floor = f.split('|')
-      @floors << {:id => floor[0], :stage => floor[1], :name => floor[7], :stamina => floor[4]}
-    end
-  end
-
-  def get_helpers_url(user)
-    encypt = Checksum.new
-    post_data = {
-      :floorId => @wave_floor,
-      :uid => user.data['uid'],
-      :session => user.data['session'],
-      :language => user.post_data[:language],
-      :platform => user.post_data[:platform],
-      :version => user.post_data[:version],
-      :timestamp => Time.now.to_i,
-      :timezone => user.post_data[:timezone],
-      :nData => encypt.getNData
-    }
-=begin
-    uri = Addressable::URI.new
-    uri.query_values = post_data
-    url = "/api/floor/helpers?#{uri.query}"
-    #puts url
-    return "#{url}&hash=#{encypt.getHash(url, '')}"
-=end
-    return TosUrl.new :path => "/api/floor/helpers" ,:data => post_data
-  end
-
-  def get_enter_url(user)
-    encypt = Checksum.new
-    post_data = {
-      :floorId => @wave_floor,
-      :team => @wave_team,
-      :helperUid => @wave_helper[:uid],
-      :clientHelperCard => @wave_helper[:clientHelperCard],
-      :uid => user.data['uid'],
-      :session => user.data['session'],
-      :language => user.post_data[:language],
-      :platform => user.post_data[:platform],
-      :version => user.post_data[:version],
-      :timestamp => Time.now.to_i,
-      :timezone => user.post_data[:timezone],
-      :nData => encypt.getNData
-    }
-=begin
-    uri = Addressable::URI.new
-    uri.query_values = post_data
-    url = "/api/floor/enter?#{uri.query}"
-    #puts url
-    return "#{url}&hash=#{encypt.getHash(url, '')}"
-=end
-    return TosUrl.new :path => "/api/floor/enter" ,:data => post_data
-  end
-
-  def get_fail_url(user)
-    encypt = Checksum.new
-    post_data = {
-      :floorId => @wave_floor,
-      :team => @wave_team,
-      :helperUid => @wave_helper[:uid],
-      :uid => user.data['uid'],
-      :session => user.data['session'],
-      :language => user.post_data[:language],
-      :platform => user.post_data[:platform],
-      :version => user.post_data[:version],
-      :timestamp => Time.now.to_i,
-      :timezone => user.post_data[:timezone],
-      :nData => encypt.getNData
-    }
-=begin
-    uri = Addressable::URI.new
-    uri.query_values = post_data
-    url = "/api/floor/fail?#{uri.query}"
-    #puts url
-    return "#{url}&hash=#{encypt.getHash(url, '')}"
-=end
-    return TosUrl.new :path => "api/floor/fail" ,:data => post_data
-  end
-
-  def get_complete_url(user)
-    encypt = Checksum.new
-    @finish_data[:uid] = user.data['uid']
-    @finish_data[:session] = user.data['session']
-    @finish_data[:language] = user.post_data[:language]
-    @finish_data[:platform] = user.post_data[:platform]
-    @finish_data[:version] = user.post_data[:version]
-    @finish_data[:timestamp] = Time.now.to_i
-    @finish_data[:timezone] = user.post_data[:timezone]
-    @finish_data[:nData] = encypt.getNData
-#
-    acs_uri = Addressable::URI.new
-    acs_uri.query_values = @acs_data
-    acs_url = acs_uri.query
-    acs_url = "#{acs_url}&acsh=#{encypt.getHash(acs_url, '')}"
-    #puts acs_url
-
-    uri = Addressable::URI.new
-    uri.query_values = @finish_data
-    url = "/api/floor/complete?#{uri.query}&#{acs_url}"
-    #puts url
-    return "#{url}&hash=#{encypt.getHash(url, '')}"
+    @acs_data['e'] = 25.0 if @acs_data['e'] < 25.0
   end
 end
