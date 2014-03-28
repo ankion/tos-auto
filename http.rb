@@ -69,7 +69,7 @@ class TosHttp
         @logger.info page.body
         res_json = JSON.parse(page.body)
         break if res_json['respond'].to_i == 1
-        puts res_json.inspect
+        puts res_json.to_json
         if res_json['respond'].to_i == 6 or res_json['respond'].to_i == 3
           #puts res_json['respond']['errorMessage']
           if res_json['respond'].to_i == 3
