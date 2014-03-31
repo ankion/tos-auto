@@ -744,6 +744,7 @@ class Tos
         sourceCard = @user.find_cards_by_monster(sourceId).first
         next unless sourceCard
         sourceMonster = sourceCard.last['monster']
+        next if sourceMonster['level'].to_i == sourceMonster['maxLevel'].to_i
         targetIds = find_merge_card(sourceCard.last, merge['targets'], @auto_merge_cards)
         next if targetIds.count == 0
         puts "%3d lv%2d %s <= {" % [sourceMonster['monsterId'], sourceMonster['level'], sourceMonster['monsterName']]
