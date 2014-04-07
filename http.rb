@@ -38,8 +38,8 @@ class TosHttp
 
   def init_base_post_data(full_url)
     @base_post_data["frags"] = @encypt.getHash('frags', full_url)
-    @base_post_data["ness"] = @encypt.getHash('ness', full_url)
-    @base_post_data["afe"] = @encypt.getHash('afe', full_url)
+    @base_post_data["mhe"] = @encypt.getHash('ness', full_url)
+    @base_post_data["tyu"] = @encypt.getHash('afe', full_url)
   end
 
   def post(api, get_data = {}, post_data = {})
@@ -50,10 +50,10 @@ class TosHttp
         self.init_base_get_data
         salt = ''
         if api.include? 'user/login' or api.include? 'user/register'
-          get_data['olv'] = @encypt.getHash('olv', @base_get_data['timestamp'], '00')
+          get_data['iay'] = @encypt.getHash('olv', @base_get_data['timestamp'], '00')
           salt = get_data['deviceKey']
         else
-          get_data['olv'] = @encypt.getHash('olv', @base_get_data['timestamp'], "#{@user_data['level']}#{@user_data['exp']}")
+          get_data['iay'] = @encypt.getHash('olv', @base_get_data['timestamp'], "#{@user_data['level']}#{@user_data['exp']}")
           salt = "#{@base_get_data['uid']}#{@base_get_data['session']}"
         end
         get_data = @base_get_data.merge get_data
